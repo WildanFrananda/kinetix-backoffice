@@ -1,8 +1,10 @@
 # CLAUDE.md — kinetix-backoffice
 
-The staff web app at `backoffice.wildanfrananda.my.id`, the one operator UI for every Kinetix service. Plan of record:
-`kinetix-infrastructure/docs/BACKOFFICE.md` (rulings BO-D1–D7, API gaps §7, order of work §8). This repository is
-public: never commit staff ranges, addresses, server names or anything from the infrastructure repository.
+The staff web app, the one operator UI for every Kinetix service. It has no public name: staff open it as a Tor onion
+service with client authorization, or over the staff VPN when Tor misbehaves, and the app works the same on both
+because it only ever calls its own origin. Plan of record: `kinetix-infrastructure/docs/BACKOFFICE.md` (rulings
+BO-D1–D10, API gaps §7, order of work §8, onion-only access §10). This repository is public: never commit the onion
+address, staff ranges, addresses, server names or anything from the infrastructure repository.
 
 ## What it is, and what it never does
 
@@ -152,6 +154,37 @@ E2E_HOST_RESOLVER_RULES="MAP backoffice.localhost kinetix-api-gateway" bin/e2e
   `SameSite=Strict`, no `Max-Age` and unreadable from scripts, sign-out, and no console error or warning.
 - **One run at a time, a minute apart:** identity allows 5 sign-in attempts per address per minute and a run makes
   four. Two runs back to back hit the limit; the page then shows the 429 with its countdown, which is correct.
+
+### Through Tor, on the onion face (2026-10-28)
+
+The backoffice is reached as an onion service with client authorization (infra `docs/BACKOFFICE.md` §10). The same
+suite runs through it in Firefox when `E2E_TOR_PROXY` is set (the `firefox-onion` project in
+`e2e/playwright.config.ts`). The lab needs `kinetix-tor` up beside the gateway, the edge and this app, and a Tor client
+on the lab network holding a lab client key (`bin/kinetix onion client add dev <name>` in the infrastructure
+repository prints its auth line):
+
+```sh
+docker volume create kxlab-onion-auth
+docker run --rm -v kxlab-onion-auth:/auth -v <dir holding lab.auth_private>:/src:ro alpine:3.22.2 \
+  sh -c 'install -o 100 -g 101 -m 600 /src/lab.auth_private /auth/ && chown 100:101 /auth && chmod 700 /auth'
+docker run -d --name kxlab-tor-client --network kinetix -v kxlab-onion-auth:/auth --entrypoint tor kinetix-kinetix-tor \
+  --SocksPort 0.0.0.0:9050 --SocksPolicy "accept *" --ClientOnionAuthDir /auth --DataDirectory /tmp/tor-client
+KINETIX_INFRA_DIR=../kinetix-infrastructure E2E_API_URL=https://localhost:8443 \
+E2E_BASE_URL=http://<the lab's onion address> E2E_TOR_PROXY=socks5://kxlab-tor-client:9050 bin/e2e
+```
+
+- **Firefox is set up as Tor Browser is.** `dom.securecontext.allowlist_onions` makes `http://…onion` a secure
+  context, so the edge's `__Host-kx_session` (`Secure`) is kept; `network.proxy.socks_remote_dns` lets Tor resolve the
+  address. `security.mixed_content.upgrade_display_content` is off because upstream Firefox (since 127) rewrites the
+  page's own `http://…onion` images to `https` and they break; Tor Browser hit exactly this in 14.0a1 and exempts
+  `.onion` from the upgrade (tor-browser#43012, merge request 1116). Without it the marks and the favicon fail.
+- **Slower timeouts** through Tor: 180 s a test, 30 s an expectation.
+- **The test waits for "You are signed out." before leaving the page.** Sign-out lands on `/sign-in`, whose
+  `beforeLoad` reads the session; through Tor that takes a second, and Firefox rejects a fetch still in flight when the
+  page unloads, which the error boundary logs from the page being left (React's `onCaughtError`). Chromium drops such
+  a fetch silently. Not a fault a person sees, but the suite's no-console-problem check would.
+- First run 2026-10-28, both tests green through the real Tor network; the same suite on the TLS face in Chromium
+  stayed green. A Tor client without the key cannot connect at all (`curl` through it: SOCKS5 refused).
 
 ## Not yet here
 

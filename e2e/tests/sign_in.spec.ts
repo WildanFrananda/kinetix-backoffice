@@ -57,6 +57,7 @@ test("an admin enrols a second factor, signs in with it and signs out", async ({
 
   await page.getByRole("button", { name: "Sign out" }).click()
   await expect(page).toHaveURL(/\/sign-in\?notice=signed-out$/)
+  await expect(page.getByText("You are signed out.")).toBeVisible()
   await page.goto("/")
   await expect(page).toHaveURL(/\/sign-in\?redirect=%2F$/)
   expect((await context.cookies()).some((cookie) => cookie.name === "__Host-kx_session")).toBe(false)

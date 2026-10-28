@@ -40,6 +40,6 @@ fi
 E2E_ADMIN_EMAIL="$admin_email" E2E_ADMIN_PASSWORD="$password" \
 E2E_CUSTOMER_EMAIL="$customer_email" E2E_CUSTOMER_PASSWORD="$password" \
   docker compose -f toolchain/compose.yaml run --rm -T \
-    -e E2E_BASE_URL -e E2E_IGNORE_HTTPS_ERRORS -e E2E_HOST_RESOLVER_RULES \
+    -e E2E_BASE_URL -e E2E_IGNORE_HTTPS_ERRORS -e E2E_HOST_RESOLVER_RULES -e E2E_TOR_PROXY \
     -e E2E_ADMIN_EMAIL -e E2E_ADMIN_PASSWORD -e E2E_CUSTOMER_EMAIL -e E2E_CUSTOMER_PASSWORD \
     e2e npx playwright test --config e2e/playwright.config.ts "$@"
