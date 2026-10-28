@@ -123,8 +123,10 @@ on `main` and fails when the docs moved and this repository did not follow.
 
 `scripts/check_leaks.ts` refuses private keys, age keys, JWTs, AWS keys and IPv4 addresses outside loopback and
 the documentation ranges, plus every entry of `KINETIX_DENYLIST` (a CI secret, never committed). `bin/ci` runs the
-built-in rules; CI's `leaks` job adds the denylist and fails if the secret is empty. GitLab runs gitleaks through
-the infrastructure template.
+built-in rules; CI's `leaks` job adds the denylist and fails if the secret is empty on a push or on a pull request from
+this repository. Dependabot's pull requests get Dependabot secrets only, never Actions secrets, and change only manifests
+and lockfiles, so for them (and for forks) the job runs the built-in rules with an empty list, as `kinetix-docs` does;
+the secret is not copied into Dependabot's store. GitLab runs gitleaks through the infrastructure template.
 
 ## End to end against the lab (`bin/e2e`)
 

@@ -22,7 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Nothing on the denylist is published
+      - name: Require the denylist
+        if: >-
+          github.event_name == 'push'
+          || (github.event.pull_request.head.repo.full_name == github.repository
+              && github.event.pull_request.user.login != 'dependabot[bot]')
         env:
           KINETIX_DENYLIST: ${{ secrets.KINETIX_DENYLIST }}
         run: |
@@ -30,6 +34,11 @@ jobs:
             echo "KINETIX_DENYLIST resolved to an empty value; set the repository secret"
             exit 1
           fi
+
+      - name: Nothing on the denylist is published
+        env:
+          KINETIX_DENYLIST: ${{ secrets.KINETIX_DENYLIST }}
+        run: |
           docker run --rm -v "$PWD:/workspace" -w /workspace -e KINETIX_DENYLIST \
             oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 \
             bun scripts/check_leaks.ts
