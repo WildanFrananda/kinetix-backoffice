@@ -1,0 +1,39 @@
+.panel {
+  max-width: 40rem;
+}
+
+.title {
+  margin: 0 0 1rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid var(--kx-fg);
+  font-size: 1.5rem;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: minmax(8rem, max-content) minmax(0, 1fr);
+  margin: 0;
+}
+
+.facts dt,
+.facts dd {
+  margin: 0;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--kx-rule);
+}
+
+.facts dt {
+  padding-right: 1rem;
+  font-family: var(--kx-font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kx-gray-3);
+}
+
+.mono {
+  font-family: var(--kx-font-mono);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}

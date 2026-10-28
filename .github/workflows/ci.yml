@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Biome, tsc, Vitest, build and the built-in leak rules, in the toolchain the laptop runs
+        run: sh bin/dev bin/ci
+
+      - if: always()
+        run: sh bin/dev down
+
+  leaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Nothing on the denylist is published
+        env:
+          KINETIX_DENYLIST: ${{ secrets.KINETIX_DENYLIST }}
+        run: |
+          if [ -z "$KINETIX_DENYLIST" ]; then
+            echo "KINETIX_DENYLIST resolved to an empty value; set the repository secret"
+            exit 1
+          fi
+          docker run --rm -v "$PWD:/workspace" -w /workspace -e KINETIX_DENYLIST \
+            oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 \
+            bun scripts/check_leaks.ts
+
+  shared:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: The design tokens and marks equal kinetix-docs on main
+        run: |
+          docker run --rm -v "$PWD:/workspace" -w /workspace -e KINETIX_DOCS_REF=main \
+            oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 \
+            bun scripts/check_shared_upstream.ts
+
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/checkout@v7
+        with:
+          repository: WildanFrananda/kinetix-docs
+          ref: main
+          path: reference
+
+      - name: Every call matches the REST reference on kinetix-docs main
+        run: |
+          docker compose -f toolchain/compose.yaml run --rm -T -v "$PWD/reference:/docs:ro" -e KINETIX_DOCS_DIR=/docs \
+            toolchain sh -c 'bun install --frozen-lockfile --ignore-scripts && sh bin/contract'
+
+      - if: always()
+        run: sh bin/dev down
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: The production image builds
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          push: false
+          tags: kinetix-backoffice:ci
+          build-args: |
+            KINETIX_SERVICE_VERSION=${{ github.sha }}
+          cache-from: type=gha
+          provenance: false
+
+      - name: The image runs as a user, read-only, knows its build and serves the app with its headers
+        run: |
+          user="$(docker image inspect -f '{{.Config.User}}' kinetix-backoffice:ci)"
+          [ "$user" = 101 ] || { echo "the image runs as '$user'"; exit 1; }
+          if docker run --rm --entrypoint sh kinetix-backoffice:ci -c 'ls -a / /usr/share/nginx/html' | grep -qE '^\.(git|env)$'; then
+            echo "the image carries .git or .env"
+            exit 1
+          fi
+          [ "$(docker run --rm --entrypoint printenv kinetix-backoffice:ci KINETIX_SERVICE_VERSION)" = "${{ github.sha }}" ]
+          docker run -d --name app --read-only --tmpfs /tmp -p 127.0.0.1:8080:8080 kinetix-backoffice:ci
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            curl -sf http://127.0.0.1:8080/healthz >/dev/null && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8080/healthz
+          headers="$(curl -sfI http://127.0.0.1:8080/ | tr -d '\r')"
+          echo "$headers" | grep -q "^Content-Security-Policy: default-src 'none'; script-src 'self' 'sha256-"
+          echo "$headers" | grep -q "^X-Content-Type-Options: nosniff"
+          echo "$headers" | grep -q "^X-Frame-Options: DENY"
+          echo "$headers" | grep -q "^Cache-Control: no-cache"
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/bff/session)" = 404 ]
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/assets/missing.js)" = 404 ]
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/a/deep/link)" = 200 ]
+          docker rm -f app
+
+  verify:
+    needs: [gate, leaks, shared, contract, image]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job passed
+        run: |
+          test "${{ needs.gate.result }}" = success
+          test "${{ needs.leaks.result }}" = success
+          test "${{ needs.shared.result }}" = success
+          test "${{ needs.contract.result }}" = success
+          test "${{ needs.image.result }}" = success

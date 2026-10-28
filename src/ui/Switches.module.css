@@ -1,0 +1,34 @@
+.group {
+  display: inline-flex;
+  border: 1px solid var(--kx-rule-strong);
+  border-radius: var(--kx-radius);
+}
+
+.option {
+  min-height: 2rem;
+  padding: 0.25rem 0.6rem;
+  border: 0;
+  border-right: 1px solid var(--kx-rule-strong);
+  background: transparent;
+  color: var(--kx-gray-2);
+  font-family: var(--kx-font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.option:last-child {
+  border-right: 0;
+}
+
+.option[data-selected] {
+  background: var(--kx-fg);
+  color: var(--kx-bg);
+}
+
+.option[data-focus-visible] {
+  outline: 2px solid var(--kx-accent);
+  outline-offset: 2px;
+}

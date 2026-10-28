@@ -1,0 +1,64 @@
+.frame {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--kx-rule);
+  background: var(--kx-bg);
+}
+
+.mark {
+  display: block;
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.markLight {
+  composes: mark;
+  display: none;
+}
+
+:global(:root[data-theme="light"]) .markDark {
+  display: none;
+}
+
+:global(:root[data-theme="light"]) .markLight {
+  display: block;
+}
+
+.name {
+  margin: 0;
+  font-family: var(--kx-font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--kx-gray-2);
+}
+
+.main {
+  width: 100%;
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.tools [role="alert"] {
+  color: var(--kx-accent);
+  font-size: 0.875rem;
+}

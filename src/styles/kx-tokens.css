@@ -1,0 +1,50 @@
+:root {
+  --kx-font-sans: "IBM Plex Sans Variable", "IBM Plex Sans", system-ui, sans-serif;
+  --kx-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+  --kx-font-serif: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
+
+  --kx-fg: #f6f2ea;
+  --kx-gray-1: #e9e4da;
+  --kx-gray-2: #cfc9bd;
+  --kx-gray-3: #969083;
+  --kx-gray-4: #5d584f;
+  --kx-gray-5: #34312c;
+  --kx-gray-6: #1f1d1a;
+  --kx-gray-7: #191815;
+  --kx-bg: #131210;
+
+  --kx-accent-low: #3b1e0f;
+  --kx-accent: #f0742f;
+  --kx-accent-high: #ffc9a6;
+
+  --kx-rule: #34312c;
+  --kx-rule-strong: #4a463f;
+  --kx-surface: #191815;
+  --kx-tile: #f3efe7;
+  --kx-lane-a: #74a9d6;
+  --kx-lane-b: #74c29d;
+  --kx-radius: 3px;
+}
+
+:root[data-theme="light"] {
+  --kx-fg: #171614;
+  --kx-gray-1: #2a2824;
+  --kx-gray-2: #3d3a35;
+  --kx-gray-3: #6e6a62;
+  --kx-gray-4: #9b958a;
+  --kx-gray-5: #d9d4c9;
+  --kx-gray-6: #ebe7df;
+  --kx-gray-7: #f1eee8;
+  --kx-bg: #f7f5f0;
+
+  --kx-accent-low: #fbe4d5;
+  --kx-accent: #c2410c;
+  --kx-accent-high: #8a2d08;
+
+  --kx-rule: #dcd6cb;
+  --kx-rule-strong: #bdb6a8;
+  --kx-surface: #f1eee8;
+  --kx-tile: #ffffff;
+  --kx-lane-a: #2b5f8f;
+  --kx-lane-b: #2f7a5f;
+}

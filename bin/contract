@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+
+: "${KINETIX_DOCS_DIR:?bin/contract compares the calls with a checkout of kinetix-docs: set KINETIX_DOCS_DIR}"
+
+cd "$(dirname "$0")/.."
+
+bunx --bun vitest run --config vitest.contract.config.ts

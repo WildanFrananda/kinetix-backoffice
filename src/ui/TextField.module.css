@@ -1,0 +1,53 @@
+.field {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.label {
+  font-family: var(--kx-font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kx-gray-2);
+}
+
+.input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--kx-rule-strong);
+  border-radius: var(--kx-radius);
+  background: var(--kx-surface);
+  color: var(--kx-fg);
+  font: inherit;
+}
+
+.input[data-focused] {
+  border-color: var(--kx-fg);
+  outline: 2px solid var(--kx-accent);
+  outline-offset: 1px;
+}
+
+.input[data-invalid] {
+  border-color: var(--kx-accent);
+}
+
+.code {
+  composes: input;
+  max-width: 12rem;
+  font-family: var(--kx-font-mono);
+  font-size: 1.25rem;
+  letter-spacing: 0.3em;
+}
+
+.description {
+  font-size: 0.875rem;
+  color: var(--kx-gray-3);
+}
+
+.error {
+  font-size: 0.875rem;
+  color: var(--kx-accent);
+}

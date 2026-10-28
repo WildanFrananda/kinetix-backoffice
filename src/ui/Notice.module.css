@@ -1,0 +1,12 @@
+.notice {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0;
+  border-top: 2px solid var(--kx-fg);
+  border-bottom: 1px solid var(--kx-rule);
+  color: var(--kx-gray-1);
+}
+
+.problem {
+  composes: notice;
+  border-top-color: var(--kx-accent);
+}

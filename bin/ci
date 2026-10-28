@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+cd "$(dirname "$0")/.."
+
+bun install --frozen-lockfile --ignore-scripts
+bunx biome ci --colors=off .
+bun run typecheck
+bunx --bun vitest run
+bun run build
+KINETIX_DENYLIST="${KINETIX_DENYLIST-}" bun scripts/check_leaks.ts

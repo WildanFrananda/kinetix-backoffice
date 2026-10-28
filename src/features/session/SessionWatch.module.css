@@ -1,0 +1,35 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--kx-bg) 80%, transparent);
+}
+
+.dialog {
+  width: 100%;
+  max-width: 26rem;
+  padding: 1.25rem;
+  border: 1px solid var(--kx-fg);
+  border-top-width: 2px;
+  border-radius: var(--kx-radius);
+  background: var(--kx-bg);
+  outline: none;
+}
+
+.title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.body {
+  margin: 0 0 1rem;
+  color: var(--kx-gray-1);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}

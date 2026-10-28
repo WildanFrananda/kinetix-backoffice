@@ -1,0 +1,25 @@
+{
+  "source": "WildanFrananda/kinetix-docs",
+  "files": [
+    {
+      "path": "src/styles/kx-tokens.css",
+      "from": "src/styles/kx-tokens.css",
+      "sha256": "13323a5b852d20506e16723ca22b2bb50f88d49fb27c68d647333240f823e1af"
+    },
+    {
+      "path": "src/assets/kinetix-mark-dark.svg",
+      "from": "src/assets/kinetix-mark-dark.svg",
+      "sha256": "48e89790f6c70cfa9ecd65076737d2c7957572ff5cf9b1214b5ca455f37de0cb"
+    },
+    {
+      "path": "src/assets/kinetix-mark-light.svg",
+      "from": "src/assets/kinetix-mark-light.svg",
+      "sha256": "cc1fee9b9347cb94dc1facd1ad3feeb9e88fd3f9aa03de9594fefdd9a926b7e7"
+    },
+    {
+      "path": "public/favicon.svg",
+      "from": "public/favicon.svg",
+      "sha256": "1ba3fb6db9ff01d3dda6445a126a47047b1c0666f85fb079b05d8bbff9fb17ad"
+    }
+  ]
+}

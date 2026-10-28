@@ -1,0 +1,14 @@
+.page {
+  padding-top: 0.75rem;
+  border-top: 2px solid var(--kx-fg);
+}
+
+.title {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+}
+
+.body {
+  margin: 0 0 1rem;
+  color: var(--kx-gray-2);
+}

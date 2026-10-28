@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .box { fill: #171614; } .k { stroke: #f7f5f0; } .node { fill: #c2410c; }
+    @media (prefers-color-scheme: dark) { .box { fill: #f6f2ea; } .k { stroke: #131210; } .node { fill: #f0742f; } }
+  </style>
+  <rect class="box" width="32" height="32" rx="3"/>
+  <g class="k" stroke-width="2.6" stroke-linecap="square" fill="none">
+    <path d="M10 7v18"/>
+    <path d="M10 16 22 7.5"/>
+    <path d="M10 16 22 24.5"/>
+  </g>
+  <circle class="node" cx="10" cy="16" r="3.4"/>
+</svg>

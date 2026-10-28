@@ -1,0 +1,17 @@
+name: kinetix-backoffice-toolchain
+
+services:
+  toolchain:
+    image: oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4
+    working_dir: /workspace
+    environment:
+      BUN_INSTALL_CACHE_DIR: /bun-cache
+      DO_NOT_TRACK: "1"
+    volumes:
+      - ..:/workspace
+      - node_modules:/workspace/node_modules
+      - bun_cache:/bun-cache
+
+volumes:
+  node_modules:
+  bun_cache:

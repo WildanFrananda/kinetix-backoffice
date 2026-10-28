@@ -1,0 +1,11 @@
+.git
+.github
+.gitlab-ci.yml
+node_modules
+dist
+coverage
+toolchain
+.env
+.env.*
+*.pem
+*.key
