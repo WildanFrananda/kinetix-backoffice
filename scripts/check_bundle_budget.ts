@@ -3,7 +3,7 @@ import type { BundleFile } from "./types/bundle_file.type"
 
 const budgetBytes = 200 * 1024
 
-const lazyOnly = ["WebGLRenderer"]
+const lazyOnly = ["isOrthographicCamera", "WebGLRenderer"]
 
 const client = "dist/client"
 

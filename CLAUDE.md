@@ -21,7 +21,8 @@ address, staff ranges, addresses, server names or anything from the infrastructu
 
 Bun 1.4.4 (toolchain image `oven/bun:1.4.4-slim`, pinned by digest), TanStack Start in SPA mode on Vite 8, React 19,
 TanStack Router, Query and Form, React Aria Components, Valibot, `qrcode.react`, Motion 14.2.0 (animation), Three.js
-0.186.1 (the technical drawings, never in the initial load), Phosphor icons 2.1.10, CSS Modules over the shared tokens
+0.186.1 (camera and projection for the technical drawings, painted as SVG, never in the initial load), Phosphor icons
+2.1.10, CSS Modules over the shared tokens
 with generated declarations (`typed-css-modules`), TypeScript 7, Biome with the estate's GritQL plugins, Vitest with
 jsdom and Testing Library (run under Bun: `bunx --bun vitest`), `axe-core` in the component tests, `@babel/parser` for
 the layout check, Playwright 1.64.1 with `otpauth` for the lab E2E. Production is the static build on
@@ -35,7 +36,14 @@ bin/dev bun scripts/check_layout.ts --fix   # insert the blank lines the house s
 bin/dev bun run css-types   # regenerate src/**/*.module.d.css.ts after changing a CSS module
 bin/dev bun run build   # dist/client (the app) and dist/nginx/csp.conf
 bin/dev down            # remove the toolchain's volumes
+KINETIX_BFF_TARGET=https://localhost:8443 bun run dev   # on the laptop: hot reload against the lab's edge
 ```
+
+`vite.config.ts` passes `/bff/` to `KINETIX_BFF_TARGET` with the Host and Origin of the lab's backoffice
+(`KINETIX_BFF_FACE`, `https://backoffice.localhost:8443` by default), so Kong routes it and the edge's `Origin` check
+accepts it; without the variable there is no proxy. The full procedure, the lab admin and the other two ways to look
+(the production build in the lab, the lab's onion in Tor Browser) are `kinetix-docs-internal`
+`operations/backoffice-local`.
 
 Nothing is installed on the laptop by the toolchain: its `node_modules` lives in a Docker volume. The host's
 `node_modules/` is the IDE's, installed by the user with `bun install --frozen-lockfile`; after a dependency changes
@@ -138,11 +146,24 @@ stays the docs' (`BACKOFFICE.md` §5): no gradient, glow, pill or hover lift. Wh
   `data-entering`/`data-exiting`, which React Aria waits for before unmounting.
 - **Icons**: Phosphor, regular weight, 18 px by default (`IconDefaults`), `aria-hidden` beside visible text.
 - **3D** (`src/three/`, `src/features/sign_in/DrawingFigure.tsx`): the sign-in shows a technical drawing, a rack with
-  parcels in ink lines with hidden lines removed (`LineSegments2` over paper-coloured faces), exploded then assembled,
-  turning slowly; static under reduced motion. It loads only at 64rem and wider, after the form, stops drawing out of
-  sight, follows the theme's tokens, disposes every geometry and material, and shows the mark if WebGL fails. Three.js
-  must never reach the initial load: the budget script refuses `WebGLRenderer` there. The same parts will draw real data
-  (F4's racks).
+  parcels in ink lines, exploded then assembled, turning slowly; static under reduced motion. It loads only at 64rem and
+  wider, after the form, and stops drawing out of sight. **WebGL 2 first, SVG when the browser has none** (the user,
+  2026-10-28: *"gapapa pake WebGL2, biar optimize, tapi fallback nya … pake yang solusi kamu sekarang"*; WebGL 2 is
+  allowed for later screens too, always with such a fallback). The figure probes for a WebGL 2 context and loads
+  `drawing_scene.ts` (Three.js `WebGLRenderer`, fat lines from `LineSegments2` over paper-coloured faces, colours read
+  from the theme's tokens and re-read when the theme changes); if there is none, or the renderer throws, it loads
+  `drawing_svg.ts` instead: Three.js does the camera and the projection, and SVG `<path>`s are painted, each box showing
+  only the faces that turn toward the camera and the boxes ordered back to front by an AABB separation test
+  (`box_geometry.ts`, tested in `tests/three/`). Its colours are CSS classes over the tokens, never a `style` attribute,
+  which the CSP refuses (three's own `SVGRenderer` sets one, so it is not used). `data-renderer` on the figure says which
+  one drew. Why the fallback matters: Tor Browser, the staff's main client, keeps WebGL 2 off by default
+  (fingerprinting; Mozilla's bug to drop the pref was closed WONTFIX) and blocks WebGL at its Safer level, and Three.js
+  has rendered only with WebGL 2 since r163; the first version showed only the fallback mark there. Checked on
+  2026-10-28: Chrome draws with WebGL; Firefox with WebGL 2 off, with WebGL off, and with `resistFingerprinting` on draws
+  the SVG. Not checked: Tor Browser with `webgl.enable-webgl2` switched on, because headless Firefox in the toolchain has
+  no GL driver; if Tor Browser's minimum-capability mode makes the renderer throw, the SVG takes over. Chunks: the
+  shared Three.js core 49 KiB gzip, the WebGL renderer 90 KiB, the SVG painter 2 KiB; none may reach the initial load
+  (the budget script refuses `isOrthographicCamera` and `WebGLRenderer` there). The same pair will draw F4's racks.
 - **Budget**: `scripts/check_bundle_budget.ts` sums the gzip size of every script the built `index.html` loads or
   preloads, 200 KiB at most (192.6 KiB on 2026-10-28). It forced three choices: the root's error and not-found pages
   are lazy (they pulled the public frame's controls into the main chunk), the palette and the drawer load on first use

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 import { useText } from "../../i18n/use_text"
-import type { Disposable } from "../../types/disposable.type"
 import type { DrawingColors } from "../../types/drawing_colors.type"
 import type { DrawingHandle } from "../../types/drawing_handle.type"
+import type { DrawingRenderer } from "../../types/drawing_renderer.type"
 import type { DrawingState } from "../../types/drawing_state.type"
 import { BrandMark } from "../../ui/BrandMark"
 import styles from "./DrawingFigure.module.css"
@@ -20,76 +20,113 @@ function readColors(): DrawingColors {
   }
 }
 
-function loadScene() {
+function supportsWebgl2(): boolean {
+  try {
+    const probe = document.createElement("canvas").getContext("webgl2")
+    probe?.getExtension("WEBGL_lose_context")?.loseContext()
+
+    return probe !== null
+  } catch {
+    return false
+  }
+}
+
+function loadWebgl() {
   return import("../../three/drawing_scene")
+}
+
+function loadSvg() {
+  return import("../../three/drawing_svg")
 }
 
 function DrawingFigure() {
   const text = useText()
   const frame = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
+  const surface = useRef<SVGSVGElement>(null)
   const [state, setState] = useState<DrawingState>("waiting")
+  const [renderer, setRenderer] = useState<DrawingRenderer | null>(null)
 
   useEffect(() => {
     const holder = frame.current
-    const surface = canvas.current
-    if (holder === null || surface === null || !window.matchMedia(wideQuery).matches) {
+    const glass = canvas.current
+    const sheet = surface.current
+    if (holder === null || glass === null || sheet === null || !window.matchMedia(wideQuery).matches) {
       return
     }
 
+    const box = holder
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    const observers: Disposable[] = []
+    const stops: Array<() => void> = []
     let handle: DrawingHandle | null = null
     let cancelled = false
 
-    function mount(scene: Awaited<ReturnType<typeof loadScene>>, target: HTMLCanvasElement, box: HTMLDivElement): void {
-      if (cancelled) {
-        return
-      }
-
-      try {
-        handle = scene.mountDrawing(target, { colors: readColors(), reducedMotion })
-      } catch {
-        setState("unavailable")
-
-        return
-      }
-
-      const mounted = handle
+    function watch(mounted: DrawingHandle, chosen: DrawingRenderer): void {
       const sizer = new ResizeObserver(([entry]) => {
         if (entry !== undefined) {
           mounted.resize(entry.contentRect.width, entry.contentRect.height)
         }
       })
 
-      const theme = new MutationObserver(() => mounted.recolor(readColors()))
       const sight = new IntersectionObserver(([entry]) => mounted.setRunning(entry?.isIntersecting === true))
 
       sizer.observe(box)
-      theme.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] })
       sight.observe(box)
-      observers.push(
-        { dispose: () => sizer.disconnect() },
-        { dispose: () => theme.disconnect() },
-        { dispose: () => sight.disconnect() }
+      stops.push(
+        () => sizer.disconnect(),
+        () => sight.disconnect()
       )
 
+      handle = mounted
+      setRenderer(chosen)
       setState("drawn")
     }
 
+    async function mountWebgl(target: HTMLCanvasElement): Promise<boolean> {
+      const drawing = await loadWebgl()
+
+      if (cancelled) {
+        return true
+      }
+
+      try {
+        watch(drawing.mountDrawing(target, { readColors, reducedMotion }), "webgl")
+      } catch {
+        return false
+      }
+
+      return true
+    }
+
+    async function mountSvg(target: SVGSVGElement): Promise<void> {
+      const drawing = await loadSvg()
+
+      if (cancelled) {
+        return
+      }
+
+      const classes = { face: styles.face, accent: styles.accent, floor: styles.floor }
+      watch(drawing.mountDrawing(target, { reducedMotion, classes }), "svg")
+    }
+
+    async function mount(gl: HTMLCanvasElement, svg: SVGSVGElement): Promise<void> {
+      if (supportsWebgl2() && (await mountWebgl(gl).catch(() => false))) {
+        return
+      }
+
+      await mountSvg(svg)
+    }
+
     const timer = window.setTimeout(() => {
-      loadScene().then(
-        (scene) => mount(scene, surface, holder),
-        () => setState("unavailable")
-      )
+      mount(glass, sheet).catch(() => setState("unavailable"))
     }, 250)
 
     return () => {
       cancelled = true
       window.clearTimeout(timer)
 
-      for (const observer of observers) {
-        observer.dispose()
+      for (const stop of stops) {
+        stop()
       }
 
       handle?.dispose()
@@ -97,9 +134,10 @@ function DrawingFigure() {
   }, [])
 
   return (
-    <figure className={styles.figure} data-state={state} aria-hidden="true">
+    <figure className={styles.figure} data-state={state} data-renderer={renderer ?? "none"} aria-hidden="true">
       <div ref={frame} className={styles.frame}>
         <canvas ref={canvas} className={styles.canvas} />
+        <svg ref={surface} className={styles.drawing} />
         {state === "unavailable" ? (
           <span className={styles.fallback}>
             <BrandMark size={96} />
