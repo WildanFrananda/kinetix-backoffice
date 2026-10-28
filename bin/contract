@@ -5,4 +5,8 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-bunx --bun vitest run --config vitest.contract.config.ts
+copy="$(mktemp -d)"
+trap 'rm -rf "$copy"' EXIT
+cp -R "$KINETIX_DOCS_DIR/src" "$copy/src"
+
+KINETIX_DOCS_DIR="$copy" bunx --bun vitest run --config vitest.contract.config.ts

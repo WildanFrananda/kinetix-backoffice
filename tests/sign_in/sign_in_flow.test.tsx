@@ -115,7 +115,7 @@ describe("SignInFlow", () => {
     render(<SignInFlow notice={null} onSignedIn={vi.fn()} />)
     const user = await signInWithPassword()
     expect(await screen.findByRole("heading", { name: "Set up two-factor authentication" })).toBeInTheDocument()
-    expect(await screen.findByTitle("QR code for an authenticator app")).toBeInTheDocument()
+    expect(await screen.findByRole("img", { name: "QR code for an authenticator app" })).toBeInTheDocument()
     expect(screen.getByText("JBSW Y3DP EHPK 3PXP JBSW Y3DP EHPK 3PXP")).toBeInTheDocument()
     await user.type(screen.getByLabelText(/^Code/), "654321")
     await user.click(screen.getByRole("button", { name: "Turn on" }))

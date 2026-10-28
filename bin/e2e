@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${KINETIX_INFRA_DIR:?bin/e2e drives the lab: set KINETIX_INFRA_DIR to the kinetix-infrastructure checkout}"
+: "${E2E_API_URL:?set E2E_API_URL to the lab's API, for instance https://localhost:8443}"
+: "${E2E_BASE_URL:?set E2E_BASE_URL to the lab's backoffice, for instance https://backoffice.localhost:8443}"
+
+cd "$(dirname "$0")/.."
+
+stamp="$(date +%s)"
+password="E2e-$(openssl rand -hex 12)"
+
+register() {
+  local email="$1" out code
+  out="$(curl -sS --insecure -X POST "$E2E_API_URL/api/v1/auth/register" \
+    -H 'Content-Type: application/json' \
+    -d "{\"email\":\"$email\",\"password\":\"$password\"}" -w '\n%{http_code}')"
+  code="${out##*$'\n'}"
+  out="${out%$'\n'*}"
+  if [ "$code" != 201 ]; then
+    printf 'register %s -> http %s\n%s\n' "$email" "$code" "$out" >&2
+    return 1
+  fi
+  printf '%s' "$out" | python3 -c 'import json, sys; print(json.load(sys.stdin)["user"]["id"])'
+}
+
+admin_email="e2e-admin-${stamp}@kinetix.test"
+customer_email="e2e-customer-${stamp}@kinetix.test"
+admin_id="$(register "$admin_email")"
+register "$customer_email" >/dev/null
+
+promoted="$(cd "$KINETIX_INFRA_DIR" && docker compose exec -T kinetix-identity-db \
+  psql -qtA -U kinetix_identity_root -d kinetix_identity_dev \
+  -c "UPDATE users SET role='admin' WHERE id=${admin_id} AND role='customer' RETURNING id;")"
+if [ "$(printf '%s' "$promoted" | tr -d '[:space:]')" != "$admin_id" ]; then
+  echo "could not promote user ${admin_id} to admin" >&2
+  exit 1
+fi
+
+E2E_ADMIN_EMAIL="$admin_email" E2E_ADMIN_PASSWORD="$password" \
+E2E_CUSTOMER_EMAIL="$customer_email" E2E_CUSTOMER_PASSWORD="$password" \
+  docker compose -f toolchain/compose.yaml run --rm -T \
+    -e E2E_BASE_URL -e E2E_IGNORE_HTTPS_ERRORS -e E2E_HOST_RESOLVER_RULES \
+    -e E2E_ADMIN_EMAIL -e E2E_ADMIN_PASSWORD -e E2E_CUSTOMER_EMAIL -e E2E_CUSTOMER_PASSWORD \
+    e2e npx playwright test --config e2e/playwright.config.ts "$@"

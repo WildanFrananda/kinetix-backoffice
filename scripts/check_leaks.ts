@@ -8,7 +8,7 @@ if (denylist === undefined) {
   throw new Error("KINETIX_DENYLIST is not set; set it to the denylist, or to an empty string on purpose")
 }
 
-const roots = ["src", "public", "scripts", "tests", "nginx", "toolchain", "bin", ".github"]
+const roots = ["src", "public", "scripts", "tests", "e2e", "nginx", "toolchain", "bin", ".github"]
 const files = ["Dockerfile", "README.md", "CLAUDE.md", "package.json", ".gitlab-ci.yml", "shared.lock.json"]
 const binary = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".ico", ".woff", ".woff2"])
 const rules = leakRules(denylist)

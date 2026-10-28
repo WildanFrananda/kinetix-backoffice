@@ -7,3 +7,4 @@ coverage/
 *.key
 .DS_Store
 reference/
+.tanstack/
