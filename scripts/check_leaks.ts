@@ -17,6 +17,7 @@ function listed(root: string): string[] {
   if (!existsSync(root)) {
     return []
   }
+
   return readdirSync(root, { recursive: true, withFileTypes: true })
     .filter((entry) => entry.isFile())
     .map((entry) => join(entry.parentPath, entry.name))
@@ -29,8 +30,10 @@ for (const path of [...roots.flatMap(listed), ...files.filter((file) => existsSy
   if (binary.has(extname(path).toLowerCase())) {
     continue
   }
+
   scanned += 1
   const text = readFileSync(path, "utf8")
+
   for (const rule of rules) {
     for (const match of text.matchAll(rule.pattern)) {
       if (!rule.permits(match[0])) {

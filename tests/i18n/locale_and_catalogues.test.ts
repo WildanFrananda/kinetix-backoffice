@@ -11,6 +11,7 @@ function placeholders(text: string): string[] {
 describe("catalogues", () => {
   it("hold the same keys, none blank, with the same placeholders", () => {
     expect(Object.keys(id).sort()).toEqual(Object.keys(en).sort())
+
     for (const [key, text] of Object.entries(en)) {
       const translated = (id as Record<string, string>)[key] ?? ""
       expect(text.trim(), key).not.toBe("")
@@ -35,6 +36,7 @@ describe("formatText", () => {
     expect(formatText("Signed in as {role} until {time}.", { role: "admin", time: "17:00" })).toBe(
       "Signed in as admin until 17:00."
     )
+
     expect(formatText("Reference: {reference}", {})).toBe("Reference: {reference}")
   })
 })

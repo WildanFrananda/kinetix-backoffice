@@ -11,6 +11,7 @@ function fieldError(errors: readonly unknown[], text: Catalogue): string | null 
       return isCatalogueKey(message, text) ? text[message] : message
     }
   }
+
   return null
 }
 

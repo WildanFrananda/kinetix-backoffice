@@ -18,6 +18,7 @@ type BffFailure =
     }
   | {
       kind: "rate-limited"
+      scope: "address" | "route"
       code: string | null
       retryAfterSeconds: number | null
     }

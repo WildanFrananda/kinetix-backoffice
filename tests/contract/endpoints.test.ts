@@ -19,6 +19,15 @@ describe.each(backofficeCalls.map((call) => [call.endpoint, call] as const))("%s
     expect(sent.sort()).toEqual(documented.map((field) => field.name).sort())
   })
 
+  it("sends only documented query parameters", async () => {
+    const endpoint = await docsEndpoint(call.endpoint)
+    const documented = endpoint.request.fields.filter((field) => field.in === "query").map((field) => field.name)
+
+    for (const name of Object.keys(call.query ?? {})) {
+      expect(documented, name).toContain(name)
+    }
+  })
+
   it("reads every documented success, except those of another app", async () => {
     const endpoint = await docsEndpoint(call.endpoint)
     for (const answer of endpoint.cases.filter((candidate) => candidate.status < 300)) {
@@ -26,11 +35,13 @@ describe.each(backofficeCalls.map((call) => [call.endpoint, call] as const))("%s
         expect(v.safeParse(call.schema, answer.json).success, answer.when).toBe(false)
         continue
       }
+
       if (Object.hasOwn(sellerExamples, answer.when)) {
         expect(v.safeParse(call.schema, answer.json).success, answer.when).toBe(false)
         expect(v.safeParse(call.schema, { ...(answer.json as object), role: "admin" }).success, answer.when).toBe(true)
         continue
       }
+
       const body = answer.status === 204 ? undefined : answer.json
       expect(v.safeParse(call.schema, body).success, answer.when).toBe(true)
     }

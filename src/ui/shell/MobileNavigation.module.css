@@ -1,0 +1,83 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--bo-layer-drawer);
+  background: color-mix(in srgb, var(--kx-bg) 64%, transparent);
+}
+
+.overlay[data-entering] {
+  animation: fade var(--bo-duration) var(--bo-ease-out);
+}
+
+.overlay[data-exiting] {
+  animation: fade var(--bo-duration-quick) var(--bo-ease-in) reverse;
+}
+
+.drawer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(var(--bo-sidebar), 86vw);
+  border-right: 1px solid var(--kx-rule-strong);
+  background: var(--kx-bg);
+}
+
+.drawer[data-entering] {
+  animation: slide var(--bo-duration-slow) var(--bo-ease-out);
+}
+
+.drawer[data-exiting] {
+  animation: slide var(--bo-duration) var(--bo-ease-in) reverse;
+}
+
+.dialog {
+  position: relative;
+  height: 100%;
+  outline: none;
+}
+
+.close {
+  position: absolute;
+  top: 1.125rem;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: var(--kx-radius);
+  background: transparent;
+  color: var(--kx-fg);
+  cursor: pointer;
+}
+
+.close[data-hovered] {
+  background: var(--kx-surface);
+}
+
+.close[data-focus-visible] {
+  outline: 2px solid var(--kx-accent);
+  outline-offset: 2px;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}

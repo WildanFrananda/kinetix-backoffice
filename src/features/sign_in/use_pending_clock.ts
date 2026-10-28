@@ -9,6 +9,7 @@ function usePendingClock(endsAt: number, onEnded: () => void): number {
       onEnded()
     }
   }, [remaining, onEnded])
+
   return remaining
 }
 

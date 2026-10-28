@@ -17,10 +17,12 @@ function useSignOut() {
     setFailure(null)
     const result = await bffRequest(logoutCall)
     setPending(false)
+
     if (!result.ok) {
       setFailure(result.failure)
       return
     }
+
     queryClient.clear()
     announceSession({ type: "signed-out" })
     await navigate({ to: "/sign-in", search: { notice: "signed-out" } })

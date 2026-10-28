@@ -47,11 +47,13 @@ function EnrolmentStep({
       dispatch({ type: "setup-received", setup: result.value })
       return
     }
+
     const ended = endsPending(result.failure)
     if (ended !== null) {
       dispatch({ type: "pending-ended", notice: ended })
       return
     }
+
     setProblem(result.failure)
   }, [dispatch])
 
@@ -68,11 +70,13 @@ function EnrolmentStep({
       dispatch({ type: "enrolment-confirmed" })
       return null
     }
+
     const ended = endsPending(result.failure)
     if (ended !== null) {
       dispatch({ type: "pending-ended", notice: ended })
       return null
     }
+
     return result.failure
   }
 

@@ -1,0 +1,21 @@
+.slot {
+  position: sticky;
+  top: var(--bo-bar);
+  z-index: var(--bo-layer-bar);
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem var(--bo-gutter);
+  border-bottom: 1px solid var(--kx-accent);
+  background: var(--kx-accent-low);
+  color: var(--kx-fg);
+  font-size: 0.875rem;
+}
+
+.icon {
+  flex: none;
+  color: var(--kx-accent);
+}

@@ -1,6 +1,7 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query"
 import { createRouter } from "@tanstack/react-router"
 import type { BffError } from "./api/bff_error"
+import { retryDelay, shouldRetry } from "./api/retry_policy"
 import { announceSession } from "./features/session/session_channel"
 import { routeTree } from "./routeTree.gen"
 import { ErrorPage } from "./ui/ErrorPage"
@@ -12,10 +13,12 @@ function getRouter() {
     if (kind !== "signed-out" && kind !== "role-refused") {
       return
     }
+
     const location = router.state.location
     if (location.pathname === "/sign-in") {
       return
     }
+
     queryClient.clear()
     announceSession({ type: "signed-out" })
     void router.navigate({
@@ -29,6 +32,11 @@ function getRouter() {
     mutationCache: new MutationCache({ onError: sessionLost }),
     defaultOptions: {
       queries: {
+        retry: shouldRetry,
+        retryDelay,
+        staleTime: 30_000
+      },
+      mutations: {
         retry: false
       }
     }

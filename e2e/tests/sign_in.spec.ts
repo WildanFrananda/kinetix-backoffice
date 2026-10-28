@@ -46,9 +46,13 @@ test("an admin enrols a second factor, signs in with it and signs out", async ({
   await page.getByLabel(/^Code/).fill(totpCode(secret, 30))
   await page.getByRole("button", { name: "Sign in" }).click()
 
-  await expect(page.getByRole("heading", { name: "Your account" })).toBeVisible()
+  await expect(page.getByRole("heading", { level: 1, name: "Overview" })).toBeVisible()
   await expect(page).toHaveURL(/\/$/)
   await expect(page.getByText(adminEmail)).toBeVisible()
+
+  await page.getByRole("navigation", { name: "Backoffice sections" }).getByRole("link", { name: "Account" }).click()
+  await expect(page).toHaveURL(/\/account$/)
+  await expect(page.getByRole("heading", { level: 1, name: "Your account" })).toBeFocused()
   await expect(page.locator("dd").filter({ hasText: /^admin$/ })).toBeVisible()
 
   const session = (await context.cookies()).find((cookie) => cookie.name === "__Host-kx_session")

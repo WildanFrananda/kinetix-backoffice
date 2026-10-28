@@ -20,22 +20,26 @@ address, staff ranges, addresses, server names or anything from the infrastructu
 ## Stack
 
 Bun 1.4.4 (toolchain image `oven/bun:1.4.4-slim`, pinned by digest), TanStack Start in SPA mode on Vite 8, React 19,
-TanStack Router, Query and Form, React Aria Components, Valibot, `qrcode.react`, CSS Modules over the shared tokens
+TanStack Router, Query and Form, React Aria Components, Valibot, `qrcode.react`, Motion 14.2.0 (animation), Three.js
+0.186.1 (the technical drawings, never in the initial load), Phosphor icons 2.1.10, CSS Modules over the shared tokens
 with generated declarations (`typed-css-modules`), TypeScript 7, Biome with the estate's GritQL plugins, Vitest with
-jsdom and Testing Library (run under Bun: `bunx --bun vitest`), Playwright 1.64.1 with `otpauth` for the lab E2E. Production is the static build on
+jsdom and Testing Library (run under Bun: `bunx --bun vitest`), `axe-core` in the component tests, `@babel/parser` for
+the layout check, Playwright 1.64.1 with `otpauth` for the lab E2E. Production is the static build on
 `nginxinc/nginx-unprivileged` (pinned by digest), user 101, read-only root.
 
 ## Run everything in the toolchain
 
 ```sh
-bin/dev bin/ci          # install, Biome, CSS-module types + tsc, Vitest, build, built-in leak rules
+bin/dev bin/ci          # install, Biome, layout, CSS-module types + tsc, Vitest, build, bundle budget, leak rules
+bin/dev bun scripts/check_layout.ts --fix   # insert the blank lines the house style asks for
 bin/dev bun run css-types   # regenerate src/**/*.module.d.css.ts after changing a CSS module
 bin/dev bun run build   # dist/client (the app) and dist/nginx/csp.conf
 bin/dev down            # remove the toolchain's volumes
 ```
 
-Nothing is installed on the laptop. `node_modules` lives in a Docker volume, so the host's `node_modules/` is an
-empty mount point.
+Nothing is installed on the laptop by the toolchain: its `node_modules` lives in a Docker volume. The host's
+`node_modules/` is the IDE's, installed by the user with `bun install --frozen-lockfile`; after a dependency changes
+the IDE shows "Cannot find module" until that is run again, and the toolchain never reads it.
 
 ## Code style (the estate's TypeScript rules)
 
@@ -44,6 +48,12 @@ empty mount point.
 - Functions are declared with `function`; an arrow only as an anonymous callback. Exports at the bottom of the file.
   Both are enforced by `biome-plugins/*.grit`, copied from `kinetix-seal-service`.
 - No comments; the reasoning lives here.
+- Code is never compact: a blank line after a multi-line statement or a closing brace before the next statement,
+  before a `return` that ends a block of more than two lines, and between an `if`/`for`/`while`/`switch` and a line
+  above it that it does not read. An assignment stays above the check that reads it. No blank line just inside a
+  block's braces. `scripts/check_layout.ts` (Babel's parser, rules in `scripts/layout_rules.ts`, tests in
+  `tests/scripts/layout_rules.test.ts`) enforces it in `bin/ci`, and `--fix` only inserts or removes blank lines.
+  Biome's formatter keeps them, so run the fix, then `biome format`, and the two settle in one pass.
 - React components in PascalCase files, every other module in snake_case.
 
 ## Decisions found while building F1 (2026-10-27)
@@ -107,6 +117,54 @@ empty mount point.
   It copies the docs' `src/` to a temporary directory first: a checkout without `node_modules` (CI's) cannot resolve
   the docs' `tsconfig.json` (`extends: astro/tsconfigs/strict`), and Vite's transform reads the nearest tsconfig.
   The first CI run failed all 28 checks on exactly that.
+
+## The visual and platform foundation (F2b, 2026-10-28)
+
+The user asked for animation, 3D and icons, "jangan polosan", and for the advanced fundamentals beyond the UI. The look
+stays the docs' (`BACKOFFICE.md` §5): no gradient, glow, pill or hover lift. What was added, and why each piece is so:
+
+- **Shell** (`src/ui/shell/`): a sidebar (`Sidebar`, `navigation.ts`) with only the screens that exist, a top bar with
+  the ⌘K trigger and the language and theme toggles, a drawer below 64rem (`MobileNavigation`), a skip link, and a
+  route announcer that focuses the page's `h1` and reads it out. React Aria restores focus to the opener when an overlay
+  closes, after its exit animation, so the announcer focuses again at 400 ms if focus ended outside `main`.
+- **Command palette** (`CommandPalette`, `palette_groups.ts`): React Aria `Autocomplete` in a modal. A `SearchField`
+  spends the first Escape on clearing its text; a `TextField` with `<input type="search">` keeps the searchbox role and
+  closes on the first Escape (`tests/shell/app_shell.test.tsx`).
+- **Overview** (`src/features/overview/`): five documented endpoints, each panel inside its own boundary, a dash and
+  never a zero until a figure has been read, the spoken value apart from the counting animation. Returns show in a
+  full-width panel from the same query as the attention figures, so no request is added.
+- **Motion** (`src/ui/motion/`): `LazyMotion` loads its features after the first render (`motion_features.ts`), and
+  `MotionConfig reducedMotion="user"`. Overlays (palette, drawer) animate with CSS on React Aria's
+  `data-entering`/`data-exiting`, which React Aria waits for before unmounting.
+- **Icons**: Phosphor, regular weight, 18 px by default (`IconDefaults`), `aria-hidden` beside visible text.
+- **3D** (`src/three/`, `src/features/sign_in/DrawingFigure.tsx`): the sign-in shows a technical drawing, a rack with
+  parcels in ink lines with hidden lines removed (`LineSegments2` over paper-coloured faces), exploded then assembled,
+  turning slowly; static under reduced motion. It loads only at 64rem and wider, after the form, stops drawing out of
+  sight, follows the theme's tokens, disposes every geometry and material, and shows the mark if WebGL fails. Three.js
+  must never reach the initial load: the budget script refuses `WebGLRenderer` there. The same parts will draw real data
+  (F4's racks).
+- **Budget**: `scripts/check_bundle_budget.ts` sums the gzip size of every script the built `index.html` loads or
+  preloads, 200 KiB at most (192.6 KiB on 2026-10-28). It forced three choices: the root's error and not-found pages
+  are lazy (they pulled the public frame's controls into the main chunk), the palette and the drawer load on first use
+  (with an idle prefetch of the palette), and theme and language are segmented toggles, because React Aria's
+  `Menu` + `Popover` cost 43 KiB.
+- **Request governor** (`src/api/request_governor.ts`, `governor.ts`): every BFF call takes a slot in a sliding window of
+  80 a minute, shared by the tabs over a `BroadcastChannel`; interactive calls go before polls. Kong's per-address 429
+  (it carries `X-RateLimit-Limit-Minute`) holds every tab until `Retry-After`, with a banner and a countdown; a route's
+  own 429 (identity's throttles) stays that call's failure (`failure_of.ts`, `scope`).
+- **Presence** (`src/api/presence.ts`): polling runs only while the tab is visible and there was input in the last five
+  minutes. The edge counts every `/bff/api` call as activity, so polling an unwatched page would keep an admin session
+  alive for its whole eight hours.
+- **Retries and connectivity**: queries retry a lost connection or an unavailable upstream twice (1 s, 3 s) and nothing
+  else (`retry_policy.ts`); a banner says offline or unreachable (`connectivity.ts`).
+- **Error bodies**: besides the edge's and Kong's, identity's Nest list of messages and order's problem details are
+  read; a 401 or 403 with no body is a refusal, any other body-less 4xx stays unreadable, never a business answer.
+- **Tests**: axe on the overview and the shell (`tests/support/axe.ts`; contrast is left to the browser runs), the
+  palette end to end through a memory router, the governor across two real `BroadcastChannel`s. jsdom has no
+  `matchMedia`; `tests/setup.ts` gives one that matches nothing.
+- **Seen in Chrome over CDP** against a stub edge (1280 light and dark, 390 dark): no CSP or Trusted Types violation,
+  WebGL drawn, no horizontal overflow, focus on the `h1` after every navigation. A stub that reads `csp.conf` at start
+  must be restarted after a build, or the new inline-script hashes are refused and nothing renders.
 
 ## Files shared with kinetix-docs
 
@@ -188,5 +246,6 @@ E2E_BASE_URL=http://<the lab's onion address> E2E_TOR_PROXY=socks5://kxlab-tor-c
 
 ## Not yet here
 
-- ⌘K arrives with F3, when there is something to jump to.
+- ⌘K jumps between the screens that exist and switches theme and language; lookups of an order, a job, an
+  application or a SKU arrive with the screens that own them (F3 onward).
 - The first production deploy follows F2 (`BACKOFFICE.md` §8).

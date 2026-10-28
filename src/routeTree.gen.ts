@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as Signed_inRouteImport } from './routes/_signed_in'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as Signed_inIndexRouteImport } from './routes/_signed_in/index'
+import { Route as Signed_inAccountRouteImport } from './routes/_signed_in/account'
 
 const Signed_inRoute = Signed_inRouteImport.update({
   id: '/_signed_in',
@@ -27,27 +28,40 @@ const Signed_inIndexRoute = Signed_inIndexRouteImport.update({
   path: '/',
   getParentRoute: () => Signed_inRoute,
 } as any)
+const Signed_inAccountRoute = Signed_inAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => Signed_inRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof Signed_inIndexRoute
   '/sign-in': typeof SignInRoute
+  '/account': typeof Signed_inAccountRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
+  '/account': typeof Signed_inAccountRoute
   '/': typeof Signed_inIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_signed_in': typeof Signed_inRouteWithChildren
   '/sign-in': typeof SignInRoute
+  '/_signed_in/account': typeof Signed_inAccountRoute
   '/_signed_in/': typeof Signed_inIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sign-in'
+  fullPaths: '/' | '/sign-in' | '/account'
   fileRoutesByTo: FileRoutesByTo
-  to: '/sign-in' | '/'
-  id: '__root__' | '/_signed_in' | '/sign-in' | '/_signed_in/'
+  to: '/sign-in' | '/account' | '/'
+  id:
+    | '__root__'
+    | '/_signed_in'
+    | '/sign-in'
+    | '/_signed_in/account'
+    | '/_signed_in/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -78,14 +92,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Signed_inIndexRouteImport
       parentRoute: typeof Signed_inRoute
     }
+    '/_signed_in/account': {
+      id: '/_signed_in/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof Signed_inAccountRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
   }
 }
 
 interface Signed_inRouteChildren {
+  Signed_inAccountRoute: typeof Signed_inAccountRoute
   Signed_inIndexRoute: typeof Signed_inIndexRoute
 }
 
 const Signed_inRouteChildren: Signed_inRouteChildren = {
+  Signed_inAccountRoute: Signed_inAccountRoute,
   Signed_inIndexRoute: Signed_inIndexRoute,
 }
 

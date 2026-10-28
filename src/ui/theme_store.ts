@@ -28,6 +28,7 @@ function chooseTheme(choice: ThemeChoice): void {
   } catch {
     document.documentElement.dataset.themeUnsaved = "true"
   }
+
   applyTheme(choice)
   window.dispatchEvent(new Event(changeEvent))
 }
@@ -38,9 +39,11 @@ function subscribeTheme(onChange: () => void): () => void {
     applyTheme(storedTheme())
     onChange()
   }
+
   media.addEventListener("change", follow)
   window.addEventListener(changeEvent, onChange)
   window.addEventListener("storage", follow)
+
   return () => {
     media.removeEventListener("change", follow)
     window.removeEventListener(changeEvent, onChange)

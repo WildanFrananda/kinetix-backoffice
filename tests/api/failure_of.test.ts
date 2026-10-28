@@ -12,6 +12,7 @@ describe("failureOf", () => {
       code: "SESSION_ENDED",
       requestId: "req-1"
     })
+
     expect(failureOf(401, new Headers(), edge("SESSION_REQUIRED"))).toMatchObject({ kind: "signed-out" })
   })
 
@@ -39,14 +40,73 @@ describe("failureOf", () => {
   it("carries Retry-After on a rate limit and ignores a malformed one", () => {
     expect(failureOf(429, new Headers({ "Retry-After": "17" }), edge("SIGN_IN_DELAYED"))).toEqual({
       kind: "rate-limited",
+      scope: "route",
       code: "SIGN_IN_DELAYED",
       retryAfterSeconds: 17
     })
+
     expect(failureOf(429, new Headers({ "Retry-After": "soon" }), undefined)).toEqual({
       kind: "rate-limited",
+      scope: "route",
       code: null,
       retryAfterSeconds: null
     })
+  })
+
+  it("reads identity's validation list and order's problem details as refusals with their words", () => {
+    const nest = {
+      message: ["limit must not be greater than 200", "status must be one of the following values: pending"],
+      error: "Bad Request",
+      statusCode: 400,
+      traceId: "6f1c2b9e-3d4a-4f5e-8a7b-9c0d1e2f3a4b"
+    }
+
+    expect(failureOf(400, new Headers(), nest)).toEqual({
+      kind: "refused",
+      status: 400,
+      code: "Bad Request",
+      message: "limit must not be greater than 200; status must be one of the following values: pending",
+      requestId: "6f1c2b9e-3d4a-4f5e-8a7b-9c0d1e2f3a4b"
+    })
+
+    const problem = {
+      type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+      title: "One or more validation errors occurred.",
+      status: 400,
+      errors: { limit: ["The value 'all' is not valid."] },
+      traceId: "00-abc-def-01"
+    }
+
+    expect(failureOf(400, new Headers(), problem)).toMatchObject({
+      kind: "refused",
+      message: "One or more validation errors occurred.",
+      requestId: "00-abc-def-01"
+    })
+  })
+
+  it("reads an authorization refusal with no body as a refusal, and a body it cannot parse as unreadable", () => {
+    expect(failureOf(403, new Headers(), undefined)).toEqual({
+      kind: "refused",
+      status: 403,
+      code: null,
+      message: "",
+      requestId: null
+    })
+
+    expect(failureOf(403, new Headers(), { unexpected: true })).toEqual({ kind: "unreadable", status: 403 })
+  })
+
+  it("tells Kong's per-address budget from one route's own limit by Kong's headers", () => {
+    const kong = { message: "API rate limit exceeded", request_id: "kong-3" }
+    const budget = new Headers({ "Retry-After": "23", "RateLimit-Limit": "100", "X-RateLimit-Limit-Minute": "100" })
+    expect(failureOf(429, budget, kong)).toMatchObject({
+      kind: "rate-limited",
+      scope: "address",
+      retryAfterSeconds: 23
+    })
+
+    const route = new Headers({ "Retry-After": "40", "X-RateLimit-Limit": "10" })
+    expect(failureOf(429, route, edge("TOO_MANY_REQUESTS"))).toMatchObject({ scope: "route" })
   })
 
   it("reads 502, 503 and 504 as unavailable, with or without a readable body", () => {
@@ -56,6 +116,7 @@ describe("failureOf", () => {
       code: "IDENTITY_UNAVAILABLE",
       requestId: "req-1"
     })
+
     expect(failureOf(504, new Headers(), undefined)).toEqual({
       kind: "unavailable",
       status: 504,

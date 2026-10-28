@@ -6,10 +6,12 @@ function preferredLocale(languages: readonly string[]): Locale {
     if (primary === "id" || primary === "in") {
       return "id"
     }
+
     if (primary === "en") {
       return "en"
     }
   }
+
   return "en"
 }
 

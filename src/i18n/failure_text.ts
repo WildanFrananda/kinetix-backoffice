@@ -6,9 +6,11 @@ function referenceOf(failure: BffFailure): string {
   if ("requestId" in failure && failure.requestId !== null) {
     return failure.requestId
   }
+
   if ("status" in failure) {
     return `HTTP ${failure.status}`
   }
+
   return failure.kind
 }
 

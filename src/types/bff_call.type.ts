@@ -4,6 +4,7 @@ type BffCall<Value> = {
   endpoint: string
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
   path: `/bff/${string}`
+  query?: Readonly<Record<string, string>>
   body?: unknown
   schema: GenericSchema<unknown, Value>
 }

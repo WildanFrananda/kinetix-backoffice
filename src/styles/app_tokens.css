@@ -1,0 +1,16 @@
+:root {
+  --bo-sidebar: 15.5rem;
+  --bo-bar: 3.5rem;
+  --bo-gutter: clamp(1rem, 3vw, 2rem);
+  --bo-content: 80rem;
+
+  --bo-duration-quick: 120ms;
+  --bo-duration: 200ms;
+  --bo-duration-slow: 320ms;
+  --bo-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --bo-ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+  --bo-layer-bar: 20;
+  --bo-layer-drawer: 40;
+  --bo-layer-overlay: 60;
+}

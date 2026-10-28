@@ -17,6 +17,7 @@ async function signInWithPassword() {
   await user.type(screen.getByLabelText(/^Email/), "admin@example.com")
   await user.type(screen.getByLabelText(/^Password/), "correct horse")
   await user.click(screen.getByRole("button", { name: "Continue" }))
+
   return user
 }
 
@@ -35,6 +36,7 @@ describe("SignInFlow", () => {
       "POST /bff/login": () => Response.json({ mfaRequired: true }),
       "POST /bff/2fa/verify": () => Response.json(adminSession())
     })
+
     const onSignedIn = vi.fn()
     render(<SignInFlow notice={null} onSignedIn={onSignedIn} />)
     const user = await signInWithPassword()
@@ -82,6 +84,7 @@ describe("SignInFlow", () => {
         return verifies === 1 ? edgeRefusal(401, "CODE_REFUSED") : edgeRefusal(401, "SIGN_IN_REQUIRED")
       }
     })
+
     render(<SignInFlow notice={null} onSignedIn={vi.fn()} />)
     const user = await signInWithPassword()
     await user.type(await screen.findByLabelText(/^Code/), "111111")
@@ -99,6 +102,7 @@ describe("SignInFlow", () => {
       "POST /bff/login": () => Response.json({ mfaRequired: true }),
       "POST /bff/logout": () => new Response(null, { status: 204 })
     })
+
     render(<SignInFlow notice={null} onSignedIn={vi.fn()} />)
     const user = await signInWithPassword()
     await user.click(await screen.findByRole("button", { name: "Use another account" }))
@@ -112,6 +116,7 @@ describe("SignInFlow", () => {
       "POST /bff/2fa/setup": () => Response.json(enrolmentSetup()),
       "POST /bff/2fa/enable": () => Response.json({ enabled: true })
     })
+
     render(<SignInFlow notice={null} onSignedIn={vi.fn()} />)
     const user = await signInWithPassword()
     expect(await screen.findByRole("heading", { name: "Set up two-factor authentication" })).toBeInTheDocument()
@@ -130,6 +135,7 @@ describe("SignInFlow", () => {
       "POST /bff/login": () => Response.json({ mfaEnrolmentRequired: true }),
       "POST /bff/2fa/setup": () => edgeRefusal(409, "TWO_FACTOR_ALREADY_ENABLED")
     })
+
     render(<SignInFlow notice={null} onSignedIn={vi.fn()} />)
     await signInWithPassword()
     expect(await screen.findByText(/^This account already has two-factor authentication\./)).toBeInTheDocument()

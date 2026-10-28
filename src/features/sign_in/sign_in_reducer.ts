@@ -13,11 +13,13 @@ function signInReducer(step: SignInStep, event: SignInEvent): SignInStep {
       if ("mfaRequired" in event.outcome) {
         return { name: "challenge", endsAt: event.now + challengeSeconds * 1000 }
       }
+
       return { name: "enrolment", endsAt: event.now + enrolmentSeconds * 1000, setup: null }
     case "setup-received":
       if (step.name !== "enrolment") {
         return step
       }
+
       return { ...step, setup: event.setup }
     case "enrolment-confirmed":
       return { name: "credentials", notice: "enrolled" }

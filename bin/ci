@@ -5,7 +5,9 @@ cd "$(dirname "$0")/.."
 
 bun install --frozen-lockfile --ignore-scripts
 bunx biome ci --colors=off .
+bun scripts/check_layout.ts
 bun run typecheck
 bunx --bun vitest run
 bun run build
+bun scripts/check_bundle_budget.ts
 KINETIX_DENYLIST="${KINETIX_DENYLIST-}" bun scripts/check_leaks.ts
