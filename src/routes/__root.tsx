@@ -1,10 +1,18 @@
 import { QueryClientProvider } from "@tanstack/react-query"
-import { ClientOnly, createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router"
+import {
+  ClientOnly,
+  createRootRouteWithContext,
+  HeadContent,
+  lazyRouteComponent,
+  Outlet,
+  Scripts
+} from "@tanstack/react-router"
 import { type ReactNode, useEffect } from "react"
 import { useLocale } from "../i18n/use_locale"
 import appCss from "../styles/app.css?url"
 import type { RouterContext } from "../types/router_context.type"
-import { AppFrame } from "../ui/AppFrame"
+import { IconDefaults } from "../ui/IconDefaults"
+import { MotionProvider } from "../ui/motion/MotionProvider"
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
@@ -26,13 +34,16 @@ function RootLayout() {
   useEffect(() => {
     document.documentElement.lang = locale
   }, [locale])
+
   return (
     <QueryClientProvider client={queryClient}>
-      <ClientOnly fallback={null}>
-        <AppFrame>
-          <Outlet />
-        </AppFrame>
-      </ClientOnly>
+      <MotionProvider>
+        <IconDefaults>
+          <ClientOnly fallback={null}>
+            <Outlet />
+          </ClientOnly>
+        </IconDefaults>
+      </MotionProvider>
     </QueryClientProvider>
   )
 }
@@ -52,7 +63,9 @@ const Route = createRootRouteWithContext<RouterContext>()({
     scripts: [{ src: "/theme.js" }]
   }),
   shellComponent: RootDocument,
-  component: RootLayout
+  component: RootLayout,
+  notFoundComponent: lazyRouteComponent(() => import("../ui/RootFallbacks"), "RootNotFound"),
+  errorComponent: lazyRouteComponent(() => import("../ui/RootFallbacks"), "RootError")
 })
 
 export { Route }

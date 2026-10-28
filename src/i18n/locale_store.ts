@@ -18,6 +18,7 @@ function chooseLocale(locale: Locale): void {
   } catch {
     document.documentElement.dataset.localeUnsaved = "true"
   }
+
   window.dispatchEvent(new Event(changeEvent))
 }
 
@@ -25,6 +26,7 @@ function subscribeLocale(onChange: () => void): () => void {
   window.addEventListener("languagechange", onChange)
   window.addEventListener(changeEvent, onChange)
   window.addEventListener("storage", onChange)
+
   return () => {
     window.removeEventListener("languagechange", onChange)
     window.removeEventListener(changeEvent, onChange)

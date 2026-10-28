@@ -34,11 +34,13 @@ function ChallengeStep({
       onSignedIn(result.value)
       return null
     }
+
     const ended = endsPending(result.failure)
     if (ended !== null) {
       dispatch({ type: "pending-ended", notice: ended })
       return null
     }
+
     return result.failure
   }
 

@@ -10,6 +10,7 @@ describe("signInReducer", () => {
       outcome: { mfaRequired: true },
       now: 1_000
     })
+
     expect(step).toEqual({ name: "challenge", endsAt: 301_000 })
   })
 
@@ -19,6 +20,7 @@ describe("signInReducer", () => {
       outcome: { mfaEnrolmentRequired: true },
       now: 0
     })
+
     expect(step).toEqual({ name: "enrolment", endsAt: 600_000, setup: null })
   })
 
@@ -35,10 +37,12 @@ describe("signInReducer", () => {
       name: "credentials",
       notice: "enrolled"
     })
+
     expect(signInReducer(enrolling, { type: "pending-ended", notice: "pending-ended" })).toEqual({
       name: "credentials",
       notice: "pending-ended"
     })
+
     expect(signInReducer(enrolling, { type: "restart" })).toEqual({ name: "credentials", notice: null })
   })
 })

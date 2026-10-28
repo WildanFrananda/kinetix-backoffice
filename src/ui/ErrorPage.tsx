@@ -13,6 +13,7 @@ function ErrorPage({ error }: ErrorComponentProps) {
     error instanceof BffError
       ? failureText(error.failure, text)
       : formatText(text["failure.unexpected"], { reference: error instanceof Error ? error.name : "unknown" })
+
   return (
     <section className={styles.page} role="alert">
       <h1 className={styles.title}>{text["error.title"]}</h1>

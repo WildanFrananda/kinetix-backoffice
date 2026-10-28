@@ -25,6 +25,7 @@ async function docsEndpoint(id: string): Promise<DocsEndpoint> {
       }
     }
   }
+
   throw new Error(`kinetix-docs documents no endpoint ${id}`)
 }
 

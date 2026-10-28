@@ -12,6 +12,7 @@ function listenForSessionSignals(onSignal: (signal: SessionSignal) => void): () 
   if (typeof BroadcastChannel === "undefined") {
     return () => undefined
   }
+
   const channel = new BroadcastChannel(channelName)
   channel.addEventListener("message", (event: MessageEvent<unknown>) => {
     const parsed = v.safeParse(signalSchema, event.data)
@@ -19,6 +20,7 @@ function listenForSessionSignals(onSignal: (signal: SessionSignal) => void): () 
       onSignal(parsed.output)
     }
   })
+
   return () => channel.close()
 }
 
@@ -26,6 +28,7 @@ function announceSession(signal: SessionSignal): void {
   if (typeof BroadcastChannel === "undefined") {
     return
   }
+
   const channel = new BroadcastChannel(channelName)
   channel.postMessage(signal)
   channel.close()

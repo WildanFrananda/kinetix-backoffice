@@ -1,0 +1,43 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem 2rem;
+  margin-bottom: 2rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid var(--kx-fg);
+}
+
+.copy {
+  flex: 1 1 20rem;
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0 0 0.375rem;
+  font-family: var(--kx-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--kx-gray-3);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem);
+  line-height: 1.15;
+  outline: none;
+}
+
+.lead {
+  max-width: 44rem;
+  margin: 0.5rem 0 0;
+  color: var(--kx-gray-2);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

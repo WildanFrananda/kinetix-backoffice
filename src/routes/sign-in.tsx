@@ -2,9 +2,11 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router"
 import { sessionQuery } from "../api/session_query"
 import { announceSession } from "../features/session/session_channel"
 import { SignInFlow } from "../features/sign_in/SignInFlow"
+import { SignInLayout } from "../features/sign_in/SignInLayout"
 import { safeRedirect } from "../features/sign_in/safe_redirect"
 import { signInSearch } from "../features/sign_in/sign_in_search"
 import type { SignedInSession } from "../types/signed_in_session.type"
+import { PublicFrame } from "../ui/PublicFrame"
 
 function SignInPage() {
   const search = Route.useSearch()
@@ -17,7 +19,13 @@ function SignInPage() {
     void navigate({ href: safeRedirect(search.redirect), replace: true })
   }
 
-  return <SignInFlow notice={search.notice ?? null} onSignedIn={signedIn} />
+  return (
+    <PublicFrame>
+      <SignInLayout>
+        <SignInFlow notice={search.notice ?? null} onSignedIn={signedIn} />
+      </SignInLayout>
+    </PublicFrame>
+  )
 }
 
 const Route = createFileRoute("/sign-in")({

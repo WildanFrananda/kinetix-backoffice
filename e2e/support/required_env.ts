@@ -3,6 +3,7 @@ function requiredEnv(name: string): string {
   if (value === undefined || value.length === 0) {
     throw new Error(`${name} is required; bin/e2e sets it`)
   }
+
   return value
 }
 

@@ -4,4 +4,5 @@
 @import "@fontsource/ibm-plex-mono/500.css";
 @import "@fontsource/ibm-plex-mono/600.css";
 @import "./kx-tokens.css";
+@import "./app_tokens.css";
 @import "./base.css";

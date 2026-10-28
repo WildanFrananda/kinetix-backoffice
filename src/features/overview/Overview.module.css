@@ -1,0 +1,123 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 2.5rem 2rem;
+}
+
+.wide {
+  grid-column: span 12;
+}
+
+.narrow {
+  grid-column: span 5;
+}
+
+.broad {
+  grid-column: span 7;
+}
+
+.figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  margin: 0;
+}
+
+.figures > div + div {
+  padding-left: 1.25rem;
+  border-left: 1px solid var(--kx-rule);
+}
+
+.quiet {
+  margin: 0;
+  padding: 0.875rem 0;
+  color: var(--kx-gray-3);
+  font-size: 0.875rem;
+}
+
+.settled {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.875rem 0;
+  border-top: 1px solid var(--kx-rule);
+  color: var(--kx-lane-b);
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.caption {
+  padding: 0.75rem 0 0.5rem;
+  font-family: var(--kx-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--kx-gray-3);
+}
+
+.table th {
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  border-bottom: 2px solid var(--kx-fg);
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 0.625rem 0.75rem 0.625rem 0;
+  border-bottom: 1px solid var(--kx-rule);
+  vertical-align: middle;
+}
+
+.table tbody tr {
+  transition: background-color var(--bo-duration-quick) var(--bo-ease-out);
+}
+
+.table tbody tr:hover {
+  background: var(--kx-surface);
+}
+
+.code {
+  font-family: var(--kx-font-mono);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.reason {
+  max-width: 24rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.when {
+  font-family: var(--kx-font-mono);
+  font-size: 0.8125rem;
+  color: var(--kx-gray-2);
+  white-space: nowrap;
+}
+
+@media (max-width: 63.99rem) {
+  .narrow,
+  .broad {
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 30rem) {
+  .figures > div + div {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid var(--kx-rule);
+  }
+}

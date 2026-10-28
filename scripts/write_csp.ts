@@ -13,6 +13,7 @@ const hashes = inlineScriptHashes(html)
 const styleHashes = reactAriaStyleHashes(
   readFileSync("node_modules/react-aria/dist/private/overlays/usePreventScroll.mjs", "utf8")
 )
+
 const policy = contentSecurityPolicy(hashes, styleHashes)
 
 mkdirSync("dist/nginx", { recursive: true })

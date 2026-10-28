@@ -9,6 +9,7 @@ function Notice({ tone, children }: { tone: "info" | "problem"; children: ReactN
       </p>
     )
   }
+
   return (
     <p className={styles.notice} role="status">
       {children}

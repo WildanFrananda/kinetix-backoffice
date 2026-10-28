@@ -17,6 +17,7 @@ for (const file of lock.files) {
   if (!response.ok) {
     throw new Error(`${url} answered ${response.status}`)
   }
+
   const upstream = sha256Hex(Buffer.from(await response.arrayBuffer()))
   if (upstream !== file.sha256) {
     drifted += 1

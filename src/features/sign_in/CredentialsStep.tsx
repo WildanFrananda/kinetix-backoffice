@@ -37,11 +37,13 @@ function CredentialsStep({
         dispatch({ type: "password-accepted", outcome: result.value, now: Date.now() })
         return
       }
+
       const ended = endsPending(result.failure)
       if (ended === "role-refused") {
         dispatch({ type: "pending-ended", notice: ended })
         return
       }
+
       blockUntil(retryAt(result.failure, Date.now()))
       setProblem(refusalText(result.failure, text))
     }

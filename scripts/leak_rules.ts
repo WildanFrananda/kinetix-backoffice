@@ -7,9 +7,11 @@ function never(): boolean {
 function isPublishableAddress(address: string): boolean {
   const octets = address.split(".").map(Number)
   const [first, second, third] = octets
+
   if (octets.some((octet) => octet > 255)) {
     return true
   }
+
   return (
     first === 127 ||
     address === "0.0.0.0" ||
@@ -31,6 +33,7 @@ function leakRules(denylist: string): LeakRule[] {
     { name: "aws-access-key", pattern: /\bAKIA[0-9A-Z]{16}\b/g, permits: never },
     { name: "ipv4-address", pattern: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g, permits: isPublishableAddress }
   ]
+
   const listed = denylist
     .split("\n")
     .map((entry) => entry.trim())
@@ -38,6 +41,7 @@ function leakRules(denylist: string): LeakRule[] {
     .map(function listedRule(entry, index): LeakRule {
       return { name: `denylist entry ${index + 1}`, pattern: new RegExp(escapeExpression(entry), "gi"), permits: never }
     })
+
   return [...builtin, ...listed]
 }
 

@@ -31,6 +31,7 @@ function CodeForm({
       if (failure === null) {
         return
       }
+
       blockUntil(retryAt(failure, Date.now()))
       setProblem(refusalText(failure, text))
       formApi.reset()

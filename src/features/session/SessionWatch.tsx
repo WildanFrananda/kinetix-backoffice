@@ -41,6 +41,7 @@ function SessionWatch() {
     if (expiresAt === null) {
       return
     }
+
     const delay = expiresAt - warningMs - Date.now()
     const timer = window.setTimeout(
       () => {
@@ -55,6 +56,7 @@ function SessionWatch() {
       },
       Math.max(0, delay)
     )
+
     return () => window.clearTimeout(timer)
   }, [expiresAt, queryClient])
 

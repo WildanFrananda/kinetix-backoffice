@@ -7,7 +7,9 @@ function watchPage(page: Page): string[] {
       problems.push(`${message.type()}: ${message.text()}`)
     }
   })
+
   page.on("pageerror", (error) => problems.push(`pageerror: ${error.message}`))
+
   return problems
 }
 

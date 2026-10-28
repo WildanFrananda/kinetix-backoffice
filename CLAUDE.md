@@ -1,8 +1,10 @@
 # CLAUDE.md — kinetix-backoffice
 
-The staff web app at `backoffice.wildanfrananda.my.id`, the one operator UI for every Kinetix service. Plan of record:
-`kinetix-infrastructure/docs/BACKOFFICE.md` (rulings BO-D1–D7, API gaps §7, order of work §8). This repository is
-public: never commit staff ranges, addresses, server names or anything from the infrastructure repository.
+The staff web app, the one operator UI for every Kinetix service. It has no public name: staff open it as a Tor onion
+service with client authorization, or over the staff VPN when Tor misbehaves, and the app works the same on both
+because it only ever calls its own origin. Plan of record: `kinetix-infrastructure/docs/BACKOFFICE.md` (rulings
+BO-D1–D10, API gaps §7, order of work §8, onion-only access §10). This repository is public: never commit the onion
+address, staff ranges, addresses, server names or anything from the infrastructure repository.
 
 ## What it is, and what it never does
 
@@ -18,22 +20,26 @@ public: never commit staff ranges, addresses, server names or anything from the 
 ## Stack
 
 Bun 1.4.4 (toolchain image `oven/bun:1.4.4-slim`, pinned by digest), TanStack Start in SPA mode on Vite 8, React 19,
-TanStack Router, Query and Form, React Aria Components, Valibot, `qrcode.react`, CSS Modules over the shared tokens
+TanStack Router, Query and Form, React Aria Components, Valibot, `qrcode.react`, Motion 14.2.0 (animation), Three.js
+0.186.1 (the technical drawings, never in the initial load), Phosphor icons 2.1.10, CSS Modules over the shared tokens
 with generated declarations (`typed-css-modules`), TypeScript 7, Biome with the estate's GritQL plugins, Vitest with
-jsdom and Testing Library (run under Bun: `bunx --bun vitest`), Playwright 1.64.1 with `otpauth` for the lab E2E. Production is the static build on
+jsdom and Testing Library (run under Bun: `bunx --bun vitest`), `axe-core` in the component tests, `@babel/parser` for
+the layout check, Playwright 1.64.1 with `otpauth` for the lab E2E. Production is the static build on
 `nginxinc/nginx-unprivileged` (pinned by digest), user 101, read-only root.
 
 ## Run everything in the toolchain
 
 ```sh
-bin/dev bin/ci          # install, Biome, CSS-module types + tsc, Vitest, build, built-in leak rules
+bin/dev bin/ci          # install, Biome, layout, CSS-module types + tsc, Vitest, build, bundle budget, leak rules
+bin/dev bun scripts/check_layout.ts --fix   # insert the blank lines the house style asks for
 bin/dev bun run css-types   # regenerate src/**/*.module.d.css.ts after changing a CSS module
 bin/dev bun run build   # dist/client (the app) and dist/nginx/csp.conf
 bin/dev down            # remove the toolchain's volumes
 ```
 
-Nothing is installed on the laptop. `node_modules` lives in a Docker volume, so the host's `node_modules/` is an
-empty mount point.
+Nothing is installed on the laptop by the toolchain: its `node_modules` lives in a Docker volume. The host's
+`node_modules/` is the IDE's, installed by the user with `bun install --frozen-lockfile`; after a dependency changes
+the IDE shows "Cannot find module" until that is run again, and the toolchain never reads it.
 
 ## Code style (the estate's TypeScript rules)
 
@@ -42,6 +48,12 @@ empty mount point.
 - Functions are declared with `function`; an arrow only as an anonymous callback. Exports at the bottom of the file.
   Both are enforced by `biome-plugins/*.grit`, copied from `kinetix-seal-service`.
 - No comments; the reasoning lives here.
+- Code is never compact: a blank line after a multi-line statement or a closing brace before the next statement,
+  before a `return` that ends a block of more than two lines, and between an `if`/`for`/`while`/`switch` and a line
+  above it that it does not read. An assignment stays above the check that reads it. No blank line just inside a
+  block's braces. `scripts/check_layout.ts` (Babel's parser, rules in `scripts/layout_rules.ts`, tests in
+  `tests/scripts/layout_rules.test.ts`) enforces it in `bin/ci`, and `--fix` only inserts or removes blank lines.
+  Biome's formatter keeps them, so run the fix, then `biome format`, and the two settle in one pass.
 - React components in PascalCase files, every other module in snake_case.
 
 ## Decisions found while building F1 (2026-10-27)
@@ -106,6 +118,54 @@ empty mount point.
   the docs' `tsconfig.json` (`extends: astro/tsconfigs/strict`), and Vite's transform reads the nearest tsconfig.
   The first CI run failed all 28 checks on exactly that.
 
+## The visual and platform foundation (F2b, 2026-10-28)
+
+The user asked for animation, 3D and icons, "jangan polosan", and for the advanced fundamentals beyond the UI. The look
+stays the docs' (`BACKOFFICE.md` §5): no gradient, glow, pill or hover lift. What was added, and why each piece is so:
+
+- **Shell** (`src/ui/shell/`): a sidebar (`Sidebar`, `navigation.ts`) with only the screens that exist, a top bar with
+  the ⌘K trigger and the language and theme toggles, a drawer below 64rem (`MobileNavigation`), a skip link, and a
+  route announcer that focuses the page's `h1` and reads it out. React Aria restores focus to the opener when an overlay
+  closes, after its exit animation, so the announcer focuses again at 400 ms if focus ended outside `main`.
+- **Command palette** (`CommandPalette`, `palette_groups.ts`): React Aria `Autocomplete` in a modal. A `SearchField`
+  spends the first Escape on clearing its text; a `TextField` with `<input type="search">` keeps the searchbox role and
+  closes on the first Escape (`tests/shell/app_shell.test.tsx`).
+- **Overview** (`src/features/overview/`): five documented endpoints, each panel inside its own boundary, a dash and
+  never a zero until a figure has been read, the spoken value apart from the counting animation. Returns show in a
+  full-width panel from the same query as the attention figures, so no request is added.
+- **Motion** (`src/ui/motion/`): `LazyMotion` loads its features after the first render (`motion_features.ts`), and
+  `MotionConfig reducedMotion="user"`. Overlays (palette, drawer) animate with CSS on React Aria's
+  `data-entering`/`data-exiting`, which React Aria waits for before unmounting.
+- **Icons**: Phosphor, regular weight, 18 px by default (`IconDefaults`), `aria-hidden` beside visible text.
+- **3D** (`src/three/`, `src/features/sign_in/DrawingFigure.tsx`): the sign-in shows a technical drawing, a rack with
+  parcels in ink lines with hidden lines removed (`LineSegments2` over paper-coloured faces), exploded then assembled,
+  turning slowly; static under reduced motion. It loads only at 64rem and wider, after the form, stops drawing out of
+  sight, follows the theme's tokens, disposes every geometry and material, and shows the mark if WebGL fails. Three.js
+  must never reach the initial load: the budget script refuses `WebGLRenderer` there. The same parts will draw real data
+  (F4's racks).
+- **Budget**: `scripts/check_bundle_budget.ts` sums the gzip size of every script the built `index.html` loads or
+  preloads, 200 KiB at most (192.6 KiB on 2026-10-28). It forced three choices: the root's error and not-found pages
+  are lazy (they pulled the public frame's controls into the main chunk), the palette and the drawer load on first use
+  (with an idle prefetch of the palette), and theme and language are segmented toggles, because React Aria's
+  `Menu` + `Popover` cost 43 KiB.
+- **Request governor** (`src/api/request_governor.ts`, `governor.ts`): every BFF call takes a slot in a sliding window of
+  80 a minute, shared by the tabs over a `BroadcastChannel`; interactive calls go before polls. Kong's per-address 429
+  (it carries `X-RateLimit-Limit-Minute`) holds every tab until `Retry-After`, with a banner and a countdown; a route's
+  own 429 (identity's throttles) stays that call's failure (`failure_of.ts`, `scope`).
+- **Presence** (`src/api/presence.ts`): polling runs only while the tab is visible and there was input in the last five
+  minutes. The edge counts every `/bff/api` call as activity, so polling an unwatched page would keep an admin session
+  alive for its whole eight hours.
+- **Retries and connectivity**: queries retry a lost connection or an unavailable upstream twice (1 s, 3 s) and nothing
+  else (`retry_policy.ts`); a banner says offline or unreachable (`connectivity.ts`).
+- **Error bodies**: besides the edge's and Kong's, identity's Nest list of messages and order's problem details are
+  read; a 401 or 403 with no body is a refusal, any other body-less 4xx stays unreadable, never a business answer.
+- **Tests**: axe on the overview and the shell (`tests/support/axe.ts`; contrast is left to the browser runs), the
+  palette end to end through a memory router, the governor across two real `BroadcastChannel`s. jsdom has no
+  `matchMedia`; `tests/setup.ts` gives one that matches nothing.
+- **Seen in Chrome over CDP** against a stub edge (1280 light and dark, 390 dark): no CSP or Trusted Types violation,
+  WebGL drawn, no horizontal overflow, focus on the `h1` after every navigation. A stub that reads `csp.conf` at start
+  must be restarted after a build, or the new inline-script hashes are refused and nothing renders.
+
 ## Files shared with kinetix-docs
 
 `shared.lock.json` lists the files copied from `kinetix-docs`: the design tokens (`src/styles/kx-tokens.css`), the
@@ -153,7 +213,39 @@ E2E_HOST_RESOLVER_RULES="MAP backoffice.localhost kinetix-api-gateway" bin/e2e
 - **One run at a time, a minute apart:** identity allows 5 sign-in attempts per address per minute and a run makes
   four. Two runs back to back hit the limit; the page then shows the 429 with its countdown, which is correct.
 
+### Through Tor, on the onion face (2026-10-28)
+
+The backoffice is reached as an onion service with client authorization (infra `docs/BACKOFFICE.md` §10). The same
+suite runs through it in Firefox when `E2E_TOR_PROXY` is set (the `firefox-onion` project in
+`e2e/playwright.config.ts`). The lab needs `kinetix-tor` up beside the gateway, the edge and this app, and a Tor client
+on the lab network holding a lab client key (`bin/kinetix onion client add dev <name>` in the infrastructure
+repository prints its auth line):
+
+```sh
+docker volume create kxlab-onion-auth
+docker run --rm -v kxlab-onion-auth:/auth -v <dir holding lab.auth_private>:/src:ro alpine:3.22.2 \
+  sh -c 'install -o 100 -g 101 -m 600 /src/lab.auth_private /auth/ && chown 100:101 /auth && chmod 700 /auth'
+docker run -d --name kxlab-tor-client --network kinetix -v kxlab-onion-auth:/auth --entrypoint tor kinetix-kinetix-tor \
+  --SocksPort 0.0.0.0:9050 --SocksPolicy "accept *" --ClientOnionAuthDir /auth --DataDirectory /tmp/tor-client
+KINETIX_INFRA_DIR=../kinetix-infrastructure E2E_API_URL=https://localhost:8443 \
+E2E_BASE_URL=http://<the lab's onion address> E2E_TOR_PROXY=socks5://kxlab-tor-client:9050 bin/e2e
+```
+
+- **Firefox is set up as Tor Browser is.** `dom.securecontext.allowlist_onions` makes `http://…onion` a secure
+  context, so the edge's `__Host-kx_session` (`Secure`) is kept; `network.proxy.socks_remote_dns` lets Tor resolve the
+  address. `security.mixed_content.upgrade_display_content` is off because upstream Firefox (since 127) rewrites the
+  page's own `http://…onion` images to `https` and they break; Tor Browser hit exactly this in 14.0a1 and exempts
+  `.onion` from the upgrade (tor-browser#43012, merge request 1116). Without it the marks and the favicon fail.
+- **Slower timeouts** through Tor: 180 s a test, 30 s an expectation.
+- **The test waits for "You are signed out." before leaving the page.** Sign-out lands on `/sign-in`, whose
+  `beforeLoad` reads the session; through Tor that takes a second, and Firefox rejects a fetch still in flight when the
+  page unloads, which the error boundary logs from the page being left (React's `onCaughtError`). Chromium drops such
+  a fetch silently. Not a fault a person sees, but the suite's no-console-problem check would.
+- First run 2026-10-28, both tests green through the real Tor network; the same suite on the TLS face in Chromium
+  stayed green. A Tor client without the key cannot connect at all (`curl` through it: SOCKS5 refused).
+
 ## Not yet here
 
-- ⌘K arrives with F3, when there is something to jump to.
+- ⌘K jumps between the screens that exist and switches theme and language; lookups of an order, a job, an
+  application or a SKU arrive with the screens that own them (F3 onward).
 - The first production deploy follows F2 (`BACKOFFICE.md` §8).

@@ -19,9 +19,11 @@ function fakeBff(routes: Readonly<Record<string, FakeRoute>>) {
         unexpected.push(route)
         return Response.json({ error: "NOT_FOUND", message: "unexpected in test" }, { status: 404 })
       }
+
       return answer(request)
     })
   )
+
   return { seen, unexpected }
 }
 

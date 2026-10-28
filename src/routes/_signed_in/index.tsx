@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { AccountPanel } from "../../features/session/AccountPanel"
+import { OverviewPage } from "../../features/overview/OverviewPage"
 
 const Route = createFileRoute("/_signed_in/")({
-  component: AccountPanel
+  component: OverviewPage
 })
 
 export { Route }
