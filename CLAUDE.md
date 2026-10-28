@@ -20,7 +20,7 @@ public: never commit staff ranges, addresses, server names or anything from the 
 Bun 1.4.4 (toolchain image `oven/bun:1.4.4-slim`, pinned by digest), TanStack Start in SPA mode on Vite 8, React 19,
 TanStack Router, Query and Form, React Aria Components, Valibot, `qrcode.react`, CSS Modules over the shared tokens
 with generated declarations (`typed-css-modules`), TypeScript 7, Biome with the estate's GritQL plugins, Vitest with
-jsdom and Testing Library (run under Bun: `bunx --bun vitest`). Production is the static build on
+jsdom and Testing Library (run under Bun: `bunx --bun vitest`), Playwright 1.64.1 with `otpauth` for the lab E2E. Production is the static build on
 `nginxinc/nginx-unprivileged` (pinned by digest), user 101, read-only root.
 
 ## Run everything in the toolchain
@@ -102,6 +102,9 @@ empty mount point.
   `tests/contract/backoffice_calls.ts`: documented method and path through the edge, exactly the documented body
   fields, every documented success parsed by the call's schema, every documented refusal read as a known failure.
   Answers of another app are listed with the reason and must be refused. A wrong path was planted once and caught.
+  It copies the docs' `src/` to a temporary directory first: a checkout without `node_modules` (CI's) cannot resolve
+  the docs' `tsconfig.json` (`extends: astro/tsconfigs/strict`), and Vite's transform reads the nearest tsconfig.
+  The first CI run failed all 28 checks on exactly that.
 
 ## Files shared with kinetix-docs
 
@@ -123,9 +126,32 @@ the documentation ranges, plus every entry of `KINETIX_DENYLIST` (a CI secret, n
 built-in rules; CI's `leaks` job adds the denylist and fails if the secret is empty. GitLab runs gitleaks through
 the infrastructure template.
 
+## End to end against the lab (`bin/e2e`)
+
+Playwright drives the real lab: gateway, edge, identity and this app (`kinetix-infrastructure` compose, with
+`docker compose up -d --build --wait kinetix-api-gateway kinetix-edge-service kinetix-backoffice`).
+
+```sh
+KINETIX_INFRA_DIR=../kinetix-infrastructure E2E_API_URL=https://localhost:8443 \
+E2E_BASE_URL=https://backoffice.localhost:8443 E2E_IGNORE_HTTPS_ERRORS=1 \
+E2E_HOST_RESOLVER_RULES="MAP backoffice.localhost kinetix-api-gateway" bin/e2e
+```
+
+- `bin/e2e` registers a fresh customer and a fresh account through identity's API, and promotes the second to
+  admin with one SQL `UPDATE` (the one thing the API cannot do, as `kinetix-infrastructure/tests/bootstrap-test-merchant`
+  does). Then the suite runs in the Playwright image (`e2e` service in `toolchain/compose.yaml`) on the lab's
+  `kinetix` network, so the gateway's staff gate sees a lab address.
+- **Chromium resolves `*.localhost` to loopback whatever `/etc/hosts` says**, so `extra_hosts` does nothing; the
+  suite maps the host with `--host-resolver-rules` instead.
+- **`E2E_IGNORE_HTTPS_ERRORS=1` is lab only:** the lab gateway's certificate names `localhost` and
+  `kinetix-api-gateway`, not `backoffice.localhost` (a new lab gateway CA is owed, `BACKOFFICE.md` §8).
+- The suite: identity's refusals (wrong password, a customer refused by the edge) shown as words; an admin's
+  enrolment with a real TOTP (`otpauth`), sign-in with the next code, the session cookie `HttpOnly`, `Secure`,
+  `SameSite=Strict`, no `Max-Age` and unreadable from scripts, sign-out, and no console error or warning.
+- **One run at a time, a minute apart:** identity allows 5 sign-in attempts per address per minute and a run makes
+  four. Two runs back to back hit the limit; the page then shows the 429 with its countdown, which is correct.
+
 ## Not yet here
 
-- Playwright against the lab (real gateway, edge, identity) is the last gate of F2. It waits for disk: the lab's
-  images are not built on the laptop, and building them needs more room than the 15 GB the estate keeps free.
 - ⌘K arrives with F3, when there is something to jump to.
 - The first production deploy follows F2 (`BACKOFFICE.md` §8).

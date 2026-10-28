@@ -105,6 +105,8 @@ function EnrolmentStep({
               fgColor="#000000"
               bgColor="#ffffff"
               title={text["enrolment.qrLabel"]}
+              role="img"
+              aria-label={text["enrolment.qrLabel"]}
             />
           </div>
           <p className={styles.manual}>{text["enrolment.manual"]}</p>
