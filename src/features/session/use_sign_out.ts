@@ -4,6 +4,7 @@ import { useState } from "react"
 import { bffRequest } from "../../api/bff_request"
 import { logoutCall } from "../../api/calls/logout_call"
 import type { BffFailure } from "../../types/bff_failure.type"
+import { leaveSession } from "./leave_session"
 import { announceSession } from "./session_channel"
 
 function useSignOut() {
@@ -23,9 +24,8 @@ function useSignOut() {
       return
     }
 
-    queryClient.clear()
     announceSession({ type: "signed-out" })
-    await navigate({ to: "/sign-in", search: { notice: "signed-out" } })
+    await leaveSession(queryClient, () => navigate({ to: "/sign-in", search: { notice: "signed-out" } }))
   }
 
   return { signOut, pending, failure }

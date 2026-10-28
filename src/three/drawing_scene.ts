@@ -56,7 +56,7 @@ function outlineOf(box: BoxGeometry): LineSegmentsGeometry {
 function mountDrawing(
   canvas: HTMLCanvasElement,
   options: {
-    colors: DrawingColors
+    readColors: () => DrawingColors
     reducedMotion: boolean
   }
 ): DrawingHandle {
@@ -169,9 +169,13 @@ function mountDrawing(
     draw()
   }
 
+  const theme = new MutationObserver(() => recolor(options.readColors()))
+  theme.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] })
+
   function dispose(): void {
     window.cancelAnimationFrame(frame)
     running = false
+    theme.disconnect()
 
     for (const item of disposables) {
       item.dispose()
@@ -180,10 +184,10 @@ function mountDrawing(
     renderer.dispose()
   }
 
-  recolor(options.colors)
+  recolor(options.readColors())
   started = performance.now()
 
-  return { resize, recolor, setRunning, dispose }
+  return { resize, setRunning, dispose }
 }
 
 export { mountDrawing }

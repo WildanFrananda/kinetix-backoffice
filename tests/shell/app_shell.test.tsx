@@ -24,7 +24,11 @@ afterEach(() => {
 })
 
 function shellAt(path: string) {
-  const root = createRootRoute({
+  const outside = createRootRoute()
+
+  const root = createRoute({
+    getParentRoute: () => outside,
+    id: "shell",
     component: () => (
       <AppShell>
         <Outlet />
@@ -44,8 +48,14 @@ function shellAt(path: string) {
     component: () => <PageHeader eyebrow="Workspace" title="Account" />
   })
 
+  const signIn = createRoute({
+    getParentRoute: () => outside,
+    path: "/sign-in",
+    component: () => <h1>Sign in</h1>
+  })
+
   return createRouter({
-    routeTree: root.addChildren([overview, account]),
+    routeTree: outside.addChildren([root.addChildren([overview, account]), signIn]),
     history: createMemoryHistory({ initialEntries: [path] })
   })
 }
@@ -125,5 +135,35 @@ describe("the app shell", () => {
     expect(await screen.findByRole("navigation", { name: "Backoffice sections" })).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page")
     expect(await axeViolations(container)).toEqual([])
+  })
+
+  it("signs out without asking the API anything more", async () => {
+    bff = fakeBff({
+      "GET /bff/session": () => Response.json(adminSession()),
+      "GET /bff/api/v1/auth/me": () =>
+        Response.json({
+          principalId: "3c9d2e7a-6b1f-4d8e-a5c4-7e2f1b0a9d8c",
+          userId: 1,
+          email: "admin@example.com",
+          role: "admin",
+          expiresAt: "2026-10-28T20:00:00.000Z"
+        }),
+      "POST /bff/logout": () => new Response(null, { status: 204 })
+    })
+
+    const router = shellAt("/")
+    render(
+      <AppProviders client={testQueryClient()}>
+        <RouterProvider router={router} />
+      </AppProviders>
+    )
+
+    expect(await screen.findByText("admin@example.com")).toBeInTheDocument()
+    await userEvent.setup().click(screen.getByRole("button", { name: "Sign out" }))
+    await waitFor(() => expect(router.state.location.pathname).toBe("/sign-in"))
+
+    const seen = bff.seen.map((request) => request.route)
+    const after = seen.slice(seen.indexOf("POST /bff/logout") + 1)
+    expect(after).toEqual([])
   })
 })

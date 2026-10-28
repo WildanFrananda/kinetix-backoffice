@@ -2,12 +2,15 @@ import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query"
 import { createRouter } from "@tanstack/react-router"
 import type { BffError } from "./api/bff_error"
 import { retryDelay, shouldRetry } from "./api/retry_policy"
+import { leaveSession } from "./features/session/leave_session"
 import { announceSession } from "./features/session/session_channel"
 import { routeTree } from "./routeTree.gen"
 import { ErrorPage } from "./ui/ErrorPage"
 import { NotFoundPage } from "./ui/NotFoundPage"
 
 function getRouter() {
+  let leaving = false
+
   function sessionLost(error: BffError): void {
     const kind = error.failure.kind
     if (kind !== "signed-out" && kind !== "role-refused") {
@@ -15,15 +18,21 @@ function getRouter() {
     }
 
     const location = router.state.location
-    if (location.pathname === "/sign-in") {
+    if (leaving || location.pathname === "/sign-in") {
       return
     }
 
-    queryClient.clear()
+    leaving = true
     announceSession({ type: "signed-out" })
-    void router.navigate({
-      to: "/sign-in",
-      search: { redirect: location.href, notice: kind === "role-refused" ? "role-refused" : "session-ended" }
+
+    const notice = kind === "role-refused" ? "role-refused" : "session-ended"
+
+    function go(): Promise<void> {
+      return router.navigate({ to: "/sign-in", search: { redirect: location.href, notice } })
+    }
+
+    void leaveSession(queryClient, go).finally(() => {
+      leaving = false
     })
   }
 

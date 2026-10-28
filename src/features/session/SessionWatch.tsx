@@ -12,6 +12,7 @@ import type { BffFailure } from "../../types/bff_failure.type"
 import { Button } from "../../ui/Button"
 import { Notice } from "../../ui/Notice"
 import { useNow } from "../../ui/use_now"
+import { leaveSession } from "./leave_session"
 import styles from "./SessionWatch.module.css"
 import { listenForSessionSignals } from "./session_channel"
 import { useSignOut } from "./use_sign_out"
@@ -70,8 +71,7 @@ function SessionWatch() {
   useEffect(() => {
     return listenForSessionSignals((signal) => {
       if (signal.type === "signed-out") {
-        queryClient.clear()
-        void navigate({ to: "/sign-in", search: { notice: "signed-out" } })
+        void leaveSession(queryClient, () => navigate({ to: "/sign-in", search: { notice: "signed-out" } }))
       }
     })
   }, [queryClient, navigate])
