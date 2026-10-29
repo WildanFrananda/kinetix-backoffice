@@ -1,3 +1,4 @@
+import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } from "@tanstack/react-router"
 import { render, screen, waitFor, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { OverviewPage } from "../../src/features/overview/OverviewPage"
@@ -12,6 +13,13 @@ afterEach(() => {
   expect(bff.unexpected).toEqual([])
   vi.unstubAllGlobals()
 })
+
+function overviewRouter() {
+  return createRouter({
+    routeTree: createRootRoute({ component: OverviewPage }),
+    history: createMemoryHistory({ initialEntries: ["/"] })
+  })
+}
 
 function liveRoutes() {
   return {
@@ -49,7 +57,7 @@ describe("the overview", () => {
     bff = fakeBff(liveRoutes())
     const { container } = render(
       <AppProviders client={testQueryClient()}>
-        <OverviewPage />
+        <RouterProvider router={overviewRouter()} />
       </AppProviders>
     )
 
@@ -80,11 +88,11 @@ describe("the overview", () => {
 
     render(
       <AppProviders client={testQueryClient()}>
-        <OverviewPage />
+        <RouterProvider router={overviewRouter()} />
       </AppProviders>
     )
 
-    const dispatch = screen.getByRole("region", { name: "Dispatch" })
+    const dispatch = await screen.findByRole("region", { name: "Dispatch" })
     expect(await within(dispatch).findByRole("alert")).toHaveTextContent(/unavailable|cannot/i)
     expect(within(dispatch).getByRole("button", { name: "Try again" })).toBeInTheDocument()
 
@@ -93,7 +101,7 @@ describe("the overview", () => {
     expect(within(approvals).queryByRole("alert")).toBeNull()
   })
 
-  it("shows a dash, never a zero, until a figure has been read", () => {
+  it("shows a dash, never a zero, until a figure has been read", async () => {
     bff = fakeBff({})
     vi.stubGlobal(
       "fetch",
@@ -102,10 +110,11 @@ describe("the overview", () => {
 
     render(
       <AppProviders client={testQueryClient()}>
-        <OverviewPage />
+        <RouterProvider router={overviewRouter()} />
       </AppProviders>
     )
 
+    await screen.findByText("Pending", { selector: "dt" })
     expect(spoken("Pending")).toBe("—")
     expect(figure("Pending").textContent).not.toContain("0")
   })

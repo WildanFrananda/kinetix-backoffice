@@ -1,3 +1,6 @@
+import { applicantProfileCall } from "../../src/api/calls/applicant_profile_call"
+import { approveCourierCall } from "../../src/api/calls/approve_courier_call"
+import { courierApplicationsCall } from "../../src/api/calls/courier_applications_call"
 import { dispatchSummaryCall } from "../../src/api/calls/dispatch_summary_call"
 import { enableTwoFactorCall } from "../../src/api/calls/enable_two_factor_call"
 import { loginCall } from "../../src/api/calls/login_call"
@@ -5,10 +8,13 @@ import { logoutCall } from "../../src/api/calls/logout_call"
 import { meCall } from "../../src/api/calls/me_call"
 import { pendingCourierApplicationsCall } from "../../src/api/calls/pending_courier_applications_call"
 import { pendingSellerApplicationsCall } from "../../src/api/calls/pending_seller_applications_call"
+import { rejectSellerCall } from "../../src/api/calls/reject_seller_call"
 import { returnsNeedingAttentionCall } from "../../src/api/calls/returns_needing_attention_call"
 import { sagasNeedingAttentionCall } from "../../src/api/calls/sagas_needing_attention_call"
+import { sellerApplicationsCall } from "../../src/api/calls/seller_applications_call"
 import { sessionCall } from "../../src/api/calls/session_call"
 import { setupTwoFactorCall } from "../../src/api/calls/setup_two_factor_call"
+import { verifySellerCall } from "../../src/api/calls/verify_seller_call"
 import { verifyTwoFactorCall } from "../../src/api/calls/verify_two_factor_call"
 import type { BffCall } from "../../src/types/bff_call.type"
 
@@ -24,7 +30,13 @@ const backofficeCalls: ReadonlyArray<BffCall<unknown>> = [
   pendingSellerApplicationsCall,
   pendingCourierApplicationsCall,
   returnsNeedingAttentionCall,
-  sagasNeedingAttentionCall
+  sagasNeedingAttentionCall,
+  sellerApplicationsCall({ status: "pending", after: 40 }),
+  verifySellerCall(57),
+  rejectSellerCall(57),
+  courierApplicationsCall({ status: "approved", after: 0 }),
+  approveCourierCall("3c9e2a41-7b5d-4f08-9a1c-2d6e8f0b4c17"),
+  applicantProfileCall(42)
 ]
 
 const otherAppOnly: Readonly<Record<string, string>> = {

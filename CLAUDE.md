@@ -21,7 +21,7 @@ address, staff ranges, addresses, server names or anything from the infrastructu
 
 Bun 1.4.4 (toolchain image `oven/bun:1.4.4-slim`, pinned by digest), TanStack Start in SPA mode on Vite 8, React 19,
 TanStack Router, Query and Form, React Aria Components, Valibot, `qrcode.react`, Motion 14.2.0 (animation), Three.js
-0.186.1 (camera and projection for the technical drawings, painted as SVG, never in the initial load), Phosphor icons
+0.186.1 (the technical drawings: WebGL 2 first, SVG where there is none, never in the initial load), Phosphor icons
 2.1.10, CSS Modules over the shared tokens
 with generated declarations (`typed-css-modules`), TypeScript 7, Biome with the estate's GritQL plugins, Vitest with
 jsdom and Testing Library (run under Bun: `bunx --bun vitest`), `axe-core` in the component tests, `@babel/parser` for
@@ -145,25 +145,32 @@ stays the docs' (`BACKOFFICE.md` §5): no gradient, glow, pill or hover lift. Wh
   `MotionConfig reducedMotion="user"`. Overlays (palette, drawer) animate with CSS on React Aria's
   `data-entering`/`data-exiting`, which React Aria waits for before unmounting.
 - **Icons**: Phosphor, regular weight, 18 px by default (`IconDefaults`), `aria-hidden` beside visible text.
-- **3D** (`src/three/`, `src/features/sign_in/DrawingFigure.tsx`): the sign-in shows a technical drawing, a rack with
-  parcels in ink lines, exploded then assembled, turning slowly; static under reduced motion. It loads only at 64rem and
-  wider, after the form, and stops drawing out of sight. **WebGL 2 first, SVG when the browser has none** (the user,
+- **3D** (`src/three/`, `src/ui/drawing/Drawing.tsx`): the sign-in shows a technical drawing, a rack with parcels in
+  ink lines, exploded then assembled, turning slowly; static under reduced motion. It loads only at 64rem and wider,
+  after the form, and stops drawing out of sight. **WebGL 2 first, SVG when the browser has none** (the user,
   2026-10-28: *"gapapa pake WebGL2, biar optimize, tapi fallback nya … pake yang solusi kamu sekarang"*; WebGL 2 is
-  allowed for later screens too, always with such a fallback). The figure probes for a WebGL 2 context and loads
-  `drawing_scene.ts` (Three.js `WebGLRenderer`, fat lines from `LineSegments2` over paper-coloured faces, colours read
-  from the theme's tokens and re-read when the theme changes); if there is none, or the renderer throws, it loads
-  `drawing_svg.ts` instead: Three.js does the camera and the projection, and SVG `<path>`s are painted, each box showing
-  only the faces that turn toward the camera and the boxes ordered back to front by an AABB separation test
-  (`box_geometry.ts`, tested in `tests/three/`). Its colours are CSS classes over the tokens, never a `style` attribute,
-  which the CSP refuses (three's own `SVGRenderer` sets one, so it is not used). `data-renderer` on the figure says which
-  one drew. Why the fallback matters: Tor Browser, the staff's main client, keeps WebGL 2 off by default
-  (fingerprinting; Mozilla's bug to drop the pref was closed WONTFIX) and blocks WebGL at its Safer level, and Three.js
-  has rendered only with WebGL 2 since r163; the first version showed only the fallback mark there. Checked on
-  2026-10-28: Chrome draws with WebGL; Firefox with WebGL 2 off, with WebGL off, and with `resistFingerprinting` on draws
-  the SVG. Not checked: Tor Browser with `webgl.enable-webgl2` switched on, because headless Firefox in the toolchain has
-  no GL driver; if Tor Browser's minimum-capability mode makes the renderer throw, the SVG takes over. Chunks: the
-  shared Three.js core 49 KiB gzip, the WebGL renderer 90 KiB, the SVG painter 2 KiB; none may reach the initial load
-  (the budget script refuses `isOrthographicCamera` and `WebGLRenderer` there). The same pair will draw F4's racks.
+  allowed for later screens too, always with such a fallback). Since F3 a drawing is a **model** and two **painters**:
+  a model (`DrawingModel`: camera, floor, and `frame(seconds)` returning boxes, a turn and whether it has settled, plus
+  `subscribe` for changes) knows nothing of WebGL or SVG and is plain arithmetic, so it is unit-tested
+  (`rack_model.ts` for the sign-in, `features/approvals/tray_model.ts` for F3). `Drawing` probes for a WebGL 2 context
+  and loads `webgl_painter.ts` (Three.js `WebGLRenderer`, fat lines from `LineSegments2` over paper-coloured faces,
+  one shared unit box scaled per piece so no geometry is made per frame, colours read from the theme's tokens and
+  re-read when the theme changes); if there is none, or the renderer throws, it loads `svg_painter.ts`: Three.js does
+  the camera and the projection, and SVG `<path>`s are painted, each box showing only the faces that turn toward the
+  camera and the boxes ordered back to front by an AABB separation test (`box_geometry.ts`, tested in `tests/three/`).
+  The SVG's colours are CSS classes over the tokens, never a `style` attribute, which the CSP refuses (three's own
+  `SVGRenderer` sets one, so it is not used). Both painters share `drawing_loop.ts`: frames run only while the drawing
+  is on screen and the model has not settled, and a model's change wakes them, so a still drawing costs nothing.
+  `data-renderer` on the drawing's frame (`webgl` or `svg`) says which one drew. Why the fallback matters: Tor Browser,
+  the staff's main client, keeps WebGL 2 off by default (fingerprinting; Mozilla's bug to drop the pref was closed
+  WONTFIX) and blocks WebGL at its Safer level, and Three.js has rendered only with WebGL 2 since r163; the first
+  version showed only the fallback mark there. Checked on 2026-10-28: Chrome draws with WebGL; Firefox with WebGL 2
+  off, with WebGL off, and with `resistFingerprinting` on draws the SVG; Chrome with `--disable-3d-apis` draws the
+  approvals' SVG. Not checked: Tor Browser with `webgl.enable-webgl2` switched on, because headless Firefox in the
+  toolchain has no GL driver; if Tor Browser's minimum-capability mode makes the renderer throw, the SVG takes over.
+  Chunks: the shared Three.js core about 49 KiB gzip, the WebGL painter about 90 KiB, the SVG painter 2 KiB; none may
+  reach the initial load (the budget script refuses `isOrthographicCamera` and `WebGLRenderer` there). The same pair
+  will draw F4's racks.
 - **Budget**: `scripts/check_bundle_budget.ts` sums the gzip size of every script the built `index.html` loads or
   preloads, 200 KiB at most (192.6 KiB on 2026-10-28). It forced three choices: the root's error and not-found pages
   are lazy (they pulled the public frame's controls into the main chunk), the palette and the drawer load on first use
@@ -182,10 +189,77 @@ stays the docs' (`BACKOFFICE.md` §5): no gradient, glow, pill or hover lift. Wh
   read; a 401 or 403 with no body is a refusal, any other body-less 4xx stays unreadable, never a business answer.
 - **Tests**: axe on the overview and the shell (`tests/support/axe.ts`; contrast is left to the browser runs), the
   palette end to end through a memory router, the governor across two real `BroadcastChannel`s. jsdom has no
-  `matchMedia`; `tests/setup.ts` gives one that matches nothing.
+  `matchMedia` or `scrollIntoView`; `tests/setup.ts` gives a `matchMedia` that matches nothing and a `scrollIntoView` that
+  does nothing.
 - **Seen in Chrome over CDP** against a stub edge (1280 light and dark, 390 dark): no CSP or Trusted Types violation,
   WebGL drawn, no horizontal overflow, focus on the `h1` after every navigation. A stub that reads `csp.conf` at start
   must be restarted after a build, or the new inline-script hashes are refused and nothing renders.
+
+## Approvals (F3, 2026-10-28)
+
+`/approvals/sellers` and `/approvals/couriers` (`src/features/approvals/`) follow `kinetix-docs`
+`apis/rest/backoffice/seller-applications` and `courier-applications`: the list, the applicant's profile, approve, and
+for sellers reject. The user asked for the sign-in's Three.js animation here too and a UI "yang indah"; the
+`ui-ux-pro-max` skill was consulted for the queue, the confirmation and the motion rules.
+
+- **One queue page, two queues.** `useApprovalQueue` holds what both share: the selection (from the address, else the
+  oldest), J/K/A/R (`use_queue_keys.ts`; ignored while typing or in a dialog), the confirmation, the mutation and what
+  follows it. `SellerApprovalsPage` and `CourierApprovalsPage` supply the list query, the decision call and the
+  detail. Status, cursor and selection live in the URL (`approvals_search.ts`, `searchWith` keeps it short), and every
+  such change navigates with `inPlace` (`replace`, `resetScroll: false`): TanStack Router scrolls the window to the top
+  on every navigation, a search-only one included, so choosing an application used to throw the admin back to the
+  page's top (the user, 2026-10-29). Below 64rem choosing one scrolls to its detail instead, which sits under the list.
+- **Decisions.** Every approve or reject is confirmed in an `alertdialog`: Approve has the focus when approving (A then
+  Enter is the keyboard path), Cancel when rejecting. A success removes the application from the cached page (the
+  server has decided; nothing is optimistic), moves to the next one, and invalidates the queue and the Overview's count.
+  A refusal stays in the dialog in identity's own words (`<q lang="en">`) and the list is read again, because a 404 or
+  409 means someone else decided first. `decision_failure.ts` names the documented courier cases: `NO_DRIVER_RECORD`,
+  a 503 with a `FLEET_*` code (the account is a courier, approve again) and a 502 with the fleet's code (nothing
+  changed); the edge's own codes on those statuses are never read as the fleet's. An approved seller whose store was
+  not geocoded (no `latitude`/`longitude` in the answer) is told so: no courier can be sent there yet.
+- **The tray drawing** (`tray_model.ts`, `TrayFigure.tsx`): an in-tray holding one sheet per waiting application on the
+  page (oldest on top, at most 20 drawn), the selected one pulled out in the accent, and one out-tray per outcome the
+  queue has; a decision flies its sheet to its tray. It is real data and moves only when the data does: it settles
+  and stops drawing, there is no idle loop (the skill's rule against decorative infinite animation). Couriers get no
+  rejected tray: identity's courier reject is not released yet. The legend counts what was decided on this visit; the
+  user asked for today, this week and this month, kept across sign-outs, and ruled (2026-10-29) that the numbers come
+  from identity: `GET /api/v1/{sellers,couriers}/applications/tally?since=` is built in identity's working tree, and the
+  legend changes only once it is released and in the REST reference.
+  `tests/approvals/tray_model.test.ts` refuses any two boxes passing through each other once settled, which is what the
+  SVG painter's AABB ordering needs; it caught a selected sheet in a short queue lifted into the tray's front wall.
+- **Profiles** are read only after the selection rests 350 ms (`use_settled.ts`), so J held down does not spend the
+  request budget; a 404 is "no profile saved", which the docs define as an answer about the profile, not the
+  application.
+- **Feature catalogues.** The approvals' 77 strings are `src/catalogue/approvals/{en,id}.json`, merged over the shell's
+  by `featureCatalogues` (`src/i18n/feature_catalogues.ts`) into `useApprovalsText`, and loaded with the route's chunk;
+  the account page's are `src/catalogue/account/` the same way. In the shell's catalogue they cost about 4 KiB of the
+  initial load in two languages; the budget stood at 199.1 KiB with them there. A later feature does the same.
+- **Budget**: 197.0 KiB of 200 on 2026-10-28 (from 192.6): two sidebar icons (Phosphor ships all six weights per icon),
+  the routes' search validation and the shell's new keys. Headroom is about 3 KiB; each later screen adds a sidebar
+  icon and a route, so F4 should expect to buy room (a single-weight icon set, or the sidebar's icons lazy).
+- **Contract.** Calls with path values are checked against the documented template (`{id}` matches one segment) and
+  must fill every documented path field (`tests/contract/endpoints.test.ts`); a wrong path was planted and caught.
+- **Seen in Chrome over CDP** against a stateful stub edge, 1280 light and dark with WebGL, 1280 with
+  `--disable-3d-apis` (SVG, 73 paths), 390 dark: list, J/J, approve with Enter, the flight, the notice, the reject
+  dialog with Cancel focused, couriers, a decided list, the Overview; no overflow, no CSP violation or exception (the one
+  console line is the profile 404 the stub answers for an applicant without a profile). Not run: the lab E2E.
+
+## The account page (2026-10-29)
+
+The user asked for it to be made beautiful, with a 3D drawing too, and then for the identity to be "kartu pengenal" with
+animation. `IdentityCard` is a staff badge in HTML, not WebGL, so its text stays real, selectable and read out: it
+arrives in 3D (CSS perspective, Motion's spring), tilts toward a mouse pointer and shows its edge (a back plate at
+`translateZ(-9px)`), never under reduced motion or touch. The monogram, the guilloche of ink lines
+(`badge_lines.ts`, no gradient) and the two machine-readable lines, printed from the account's own role, principal
+and id, are `aria-hidden`; the lines are sized in container units so 44 characters always fit. Beside it, the session: a live countdown, its end, "Stay signed in" (`GET
+/bff/api/v1/auth/me`, a real use of the session, then a fresh read of `/bff/session`) and sign-out. The drawing
+(`session_fuse_model.ts`) is that session as fifteen slots, one per minute of the backoffice's idle limit, with a cube
+on each minute left: each minute the last one lifts away in the accent, and an extension drops cubes back in; between
+changes it is still. `session_lifetimes.ts` mirrors the edge's `config/lifetimes.tl` (900 s idle, 8 h absolute) for
+the drawing and the sentence only; the edge decides, and `expiresAt` is the truth. The page re-reads `/bff/session`
+once a minute while the admin is present (reading it does not extend it). Shown from 48rem. Tests:
+`tests/session/session_fuse_model.test.ts` (no two boxes pass through each other), `account_page.test.tsx` (axe, the
+stay flow). Tweening moved to `src/three/moving_piece.ts`, shared with the tray.
 
 ## Files shared with kinetix-docs
 
@@ -267,6 +341,10 @@ E2E_BASE_URL=http://<the lab's onion address> E2E_TOR_PROXY=socks5://kxlab-tor-c
 
 ## Not yet here
 
-- ⌘K jumps between the screens that exist and switches theme and language; lookups of an order, a job, an
-  application or a SKU arrive with the screens that own them (F3 onward).
-- The first production deploy follows F2 (`BACKOFFICE.md` §8).
+- ⌘K jumps between the screens that exist (the two queues included) and switches theme and language; lookups of an
+  order, a job, an application or a SKU by id are not built yet.
+- Rejecting a courier: identity's `POST /api/v1/couriers/{principalId}/reject` is in production since identity v1.5.0
+  and gateway v1.8.0 (2026-10-29), but not yet in the REST reference, so no screen calls it.
+  When it is: a `rejectCourierCall`, `outcomes: ["approved", "rejected"]` on the courier page, and `rejected` in its
+  status filter.
+- A reason with a rejection: identity stores none, for sellers or couriers (infra `BACKOFFICE.md` §7.2).

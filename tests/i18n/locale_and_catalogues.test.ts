@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest"
+import accountEn from "../../src/catalogue/account/en.json"
+import accountId from "../../src/catalogue/account/id.json"
+import approvalsEn from "../../src/catalogue/approvals/en.json"
+import approvalsId from "../../src/catalogue/approvals/id.json"
 import en from "../../src/catalogue/en.json"
 import id from "../../src/catalogue/id.json"
 import { formatText } from "../../src/i18n/format_text"
@@ -8,15 +12,29 @@ function placeholders(text: string): string[] {
   return [...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1] ?? "").sort()
 }
 
-describe("catalogues", () => {
-  it("hold the same keys, none blank, with the same placeholders", () => {
-    expect(Object.keys(id).sort()).toEqual(Object.keys(en).sort())
+const pairs: ReadonlyArray<[string, Record<string, string>, Record<string, string>]> = [
+  ["the shell", en, id],
+  ["approvals", approvalsEn, approvalsId],
+  ["the account page", accountEn, accountId]
+]
 
-    for (const [key, text] of Object.entries(en)) {
-      const translated = (id as Record<string, string>)[key] ?? ""
+describe.each(pairs)("the catalogues of %s", (_, english, indonesian) => {
+  it("hold the same keys, none blank, with the same placeholders", () => {
+    expect(Object.keys(indonesian).sort()).toEqual(Object.keys(english).sort())
+
+    for (const [key, text] of Object.entries(english)) {
+      const translated = indonesian[key] ?? ""
       expect(text.trim(), key).not.toBe("")
       expect(translated.trim(), key).not.toBe("")
       expect(placeholders(translated), key).toEqual(placeholders(text))
+    }
+  })
+})
+
+describe("feature catalogues", () => {
+  it("never redefine a key of the shell's", () => {
+    for (const feature of [approvalsEn, accountEn]) {
+      expect(Object.keys(feature).filter((key) => Object.hasOwn(en, key))).toEqual([])
     }
   })
 })

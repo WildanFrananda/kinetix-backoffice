@@ -1,0 +1,39 @@
+.value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.text {
+  overflow: hidden;
+  font-family: var(--kx-font-mono);
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--kx-radius);
+  background: transparent;
+  color: var(--kx-gray-3);
+  cursor: pointer;
+  transition: color var(--bo-duration-quick) var(--bo-ease-out);
+}
+
+.copy[data-hovered] {
+  border-color: var(--kx-rule);
+  color: var(--kx-fg);
+}
+
+.copy[data-focus-visible] {
+  outline: 2px solid var(--kx-accent);
+  outline-offset: 1px;
+}

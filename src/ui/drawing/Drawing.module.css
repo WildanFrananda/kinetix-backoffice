@@ -1,0 +1,53 @@
+.frame {
+  position: relative;
+}
+
+.canvas,
+.drawing {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity var(--bo-duration-slow) var(--bo-ease-out);
+}
+
+.frame[data-renderer="webgl"] .drawing,
+.frame[data-renderer="svg"] .canvas {
+  display: none;
+}
+
+.frame[data-state="drawn"] .canvas,
+.frame[data-state="drawn"] .drawing {
+  opacity: 1;
+}
+
+.face,
+.accent {
+  fill: var(--kx-bg);
+  stroke: var(--kx-fg);
+  stroke-width: 1.35px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.accent {
+  stroke: var(--kx-accent);
+  stroke-width: 1.9px;
+}
+
+.floor {
+  fill: none;
+  stroke: var(--kx-rule-strong);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+.fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 0.85;
+}

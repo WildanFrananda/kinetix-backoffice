@@ -13,6 +13,9 @@ import { Route as Signed_inRouteImport } from './routes/_signed_in'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as Signed_inIndexRouteImport } from './routes/_signed_in/index'
 import { Route as Signed_inAccountRouteImport } from './routes/_signed_in/account'
+import { Route as Signed_inApprovalsIndexRouteImport } from './routes/_signed_in/approvals.index'
+import { Route as Signed_inApprovalsCouriersRouteImport } from './routes/_signed_in/approvals.couriers'
+import { Route as Signed_inApprovalsSellersRouteImport } from './routes/_signed_in/approvals.sellers'
 
 const Signed_inRoute = Signed_inRouteImport.update({
   id: '/_signed_in',
@@ -33,16 +36,39 @@ const Signed_inAccountRoute = Signed_inAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => Signed_inRoute,
 } as any)
+const Signed_inApprovalsIndexRoute = Signed_inApprovalsIndexRouteImport.update({
+  id: '/approvals/',
+  path: '/approvals/',
+  getParentRoute: () => Signed_inRoute,
+} as any)
+const Signed_inApprovalsCouriersRoute =
+  Signed_inApprovalsCouriersRouteImport.update({
+    id: '/approvals/couriers',
+    path: '/approvals/couriers',
+    getParentRoute: () => Signed_inRoute,
+  } as any)
+const Signed_inApprovalsSellersRoute =
+  Signed_inApprovalsSellersRouteImport.update({
+    id: '/approvals/sellers',
+    path: '/approvals/sellers',
+    getParentRoute: () => Signed_inRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof Signed_inIndexRoute
   '/sign-in': typeof SignInRoute
   '/account': typeof Signed_inAccountRoute
+  '/approvals/couriers': typeof Signed_inApprovalsCouriersRoute
+  '/approvals/sellers': typeof Signed_inApprovalsSellersRoute
+  '/approvals/': typeof Signed_inApprovalsIndexRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/account': typeof Signed_inAccountRoute
   '/': typeof Signed_inIndexRoute
+  '/approvals/couriers': typeof Signed_inApprovalsCouriersRoute
+  '/approvals/sellers': typeof Signed_inApprovalsSellersRoute
+  '/approvals': typeof Signed_inApprovalsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -50,18 +76,36 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/_signed_in/account': typeof Signed_inAccountRoute
   '/_signed_in/': typeof Signed_inIndexRoute
+  '/_signed_in/approvals/couriers': typeof Signed_inApprovalsCouriersRoute
+  '/_signed_in/approvals/sellers': typeof Signed_inApprovalsSellersRoute
+  '/_signed_in/approvals/': typeof Signed_inApprovalsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sign-in' | '/account'
+  fullPaths:
+    | '/'
+    | '/sign-in'
+    | '/account'
+    | '/approvals/couriers'
+    | '/approvals/sellers'
+    | '/approvals/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/sign-in' | '/account' | '/'
+  to:
+    | '/sign-in'
+    | '/account'
+    | '/'
+    | '/approvals/couriers'
+    | '/approvals/sellers'
+    | '/approvals'
   id:
     | '__root__'
     | '/_signed_in'
     | '/sign-in'
     | '/_signed_in/account'
     | '/_signed_in/'
+    | '/_signed_in/approvals/couriers'
+    | '/_signed_in/approvals/sellers'
+    | '/_signed_in/approvals/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -99,17 +143,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Signed_inAccountRouteImport
       parentRoute: typeof Signed_inRoute
     }
+    '/_signed_in/approvals/': {
+      id: '/_signed_in/approvals/'
+      path: '/approvals'
+      fullPath: '/approvals/'
+      preLoaderRoute: typeof Signed_inApprovalsIndexRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
+    '/_signed_in/approvals/couriers': {
+      id: '/_signed_in/approvals/couriers'
+      path: '/approvals/couriers'
+      fullPath: '/approvals/couriers'
+      preLoaderRoute: typeof Signed_inApprovalsCouriersRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
+    '/_signed_in/approvals/sellers': {
+      id: '/_signed_in/approvals/sellers'
+      path: '/approvals/sellers'
+      fullPath: '/approvals/sellers'
+      preLoaderRoute: typeof Signed_inApprovalsSellersRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
   }
 }
 
 interface Signed_inRouteChildren {
   Signed_inAccountRoute: typeof Signed_inAccountRoute
   Signed_inIndexRoute: typeof Signed_inIndexRoute
+  Signed_inApprovalsCouriersRoute: typeof Signed_inApprovalsCouriersRoute
+  Signed_inApprovalsSellersRoute: typeof Signed_inApprovalsSellersRoute
+  Signed_inApprovalsIndexRoute: typeof Signed_inApprovalsIndexRoute
 }
 
 const Signed_inRouteChildren: Signed_inRouteChildren = {
   Signed_inAccountRoute: Signed_inAccountRoute,
   Signed_inIndexRoute: Signed_inIndexRoute,
+  Signed_inApprovalsCouriersRoute: Signed_inApprovalsCouriersRoute,
+  Signed_inApprovalsSellersRoute: Signed_inApprovalsSellersRoute,
+  Signed_inApprovalsIndexRoute: Signed_inApprovalsIndexRoute,
 }
 
 const Signed_inRouteWithChildren = Signed_inRoute._addFileChildren(

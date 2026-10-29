@@ -4,7 +4,7 @@ import type { DrawingBox } from "../../src/types/drawing_box.type"
 import type { ScreenRect } from "../../src/types/screen_rect.type"
 
 function box(x: number, y: number, z: number): DrawingBox {
-  return { center: [x, y, z], half: [0.5, 0.5, 0.5], accent: false }
+  return { id: `box-${x}-${y}-${z}`, center: [x, y, z], half: [0.5, 0.5, 0.5], accent: false }
 }
 
 const everywhere: ScreenRect = { left: 0, top: 0, right: 100, bottom: 100 }
@@ -26,8 +26,8 @@ describe("the box painter", () => {
   })
 
   it("lets a long shelf go behind a post that stands in front of its end", () => {
-    const shelf: DrawingBox = { center: [0, 1, 0], half: [1.5, 0.03, 0.6], accent: false }
-    const post: DrawingBox = { center: [1.46, 1.3, 0.7], half: [0.04, 1.3, 0.04], accent: false }
+    const shelf: DrawingBox = { id: "shelf", center: [0, 1, 0], half: [1.5, 0.03, 0.6], accent: false }
+    const post: DrawingBox = { id: "post", center: [1.46, 1.3, 0.7], half: [0.04, 1.3, 0.04], accent: false }
 
     expect(paintOrder([post, shelf], [everywhere, everywhere], [0.7, 0.5, 0.7])).toEqual([1, 0])
   })
