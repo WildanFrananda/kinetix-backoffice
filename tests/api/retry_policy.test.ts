@@ -15,7 +15,15 @@ describe("the retry policy", () => {
     const answers = [
       new BffError({ kind: "signed-out", code: "SESSION_ENDED", requestId: null }),
       new BffError({ kind: "rate-limited", scope: "address", code: null, retryAfterSeconds: 30 }),
-      new BffError({ kind: "refused", status: 409, code: "CONFLICT", message: "Taken.", requestId: null }),
+      new BffError({
+        kind: "refused",
+        status: 409,
+        code: "CONFLICT",
+        message: "Taken.",
+        field: null,
+        numbers: {},
+        requestId: null
+      }),
       new BffError({ kind: "unreadable", status: 200 }),
       new Error("a bug")
     ]

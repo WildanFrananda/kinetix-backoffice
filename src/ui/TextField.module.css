@@ -42,6 +42,12 @@
   letter-spacing: 0.3em;
 }
 
+.mono {
+  composes: input;
+  font-family: var(--kx-font-mono);
+  font-size: 0.9375rem;
+}
+
 .description {
   font-size: 0.875rem;
   color: var(--kx-gray-3);

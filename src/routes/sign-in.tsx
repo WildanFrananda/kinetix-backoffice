@@ -21,7 +21,7 @@ function SignInPage() {
 
   return (
     <PublicFrame>
-      <SignInLayout>
+      <SignInLayout ended={search.notice === "session-ended"}>
         <SignInFlow notice={search.notice ?? null} onSignedIn={signedIn} />
       </SignInLayout>
     </PublicFrame>

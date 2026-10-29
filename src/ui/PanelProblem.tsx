@@ -1,9 +1,9 @@
-import { WarningDiamond } from "@phosphor-icons/react"
 import { failureText } from "../i18n/failure_text"
 import { formatText } from "../i18n/format_text"
 import { useText } from "../i18n/use_text"
 import type { BffFailure } from "../types/bff_failure.type"
 import { Button } from "./Button"
+import { WarningDiamond } from "./icons/WarningDiamond"
 import styles from "./PanelProblem.module.css"
 
 function PanelProblem({ failure, onRetry }: { failure: BffFailure | null; onRetry: () => void }) {

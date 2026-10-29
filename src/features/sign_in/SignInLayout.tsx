@@ -1,10 +1,11 @@
-import { ShieldCheck } from "@phosphor-icons/react"
 import type { ReactNode } from "react"
 import { useText } from "../../i18n/use_text"
+import { ShieldCheck } from "../../ui/icons/ShieldCheck"
 import { DrawingFigure } from "./DrawingFigure"
+import { SessionEndedFigure } from "./SessionEndedFigure"
 import styles from "./SignInLayout.module.css"
 
-function SignInLayout({ children }: { children: ReactNode }) {
+function SignInLayout({ ended, children }: { ended: boolean; children: ReactNode }) {
   const text = useText()
 
   return (
@@ -16,7 +17,7 @@ function SignInLayout({ children }: { children: ReactNode }) {
         </p>
         {children}
       </section>
-      <DrawingFigure />
+      {ended ? <SessionEndedFigure /> : <DrawingFigure />}
     </div>
   )
 }

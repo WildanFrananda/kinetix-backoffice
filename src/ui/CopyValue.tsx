@@ -1,9 +1,10 @@
-import { Check, Copy } from "@phosphor-icons/react"
 import { useEffect, useState } from "react"
 import { Button } from "react-aria-components"
 import { formatText } from "../i18n/format_text"
 import { useText } from "../i18n/use_text"
 import styles from "./CopyValue.module.css"
+import { Check } from "./icons/Check"
+import { Copy } from "./icons/Copy"
 
 function CopyValue({ value, label }: { value: string; label: string }) {
   const text = useText()

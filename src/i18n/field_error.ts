@@ -1,4 +1,4 @@
-import type { Catalogue } from "../../types/catalogue.type"
+import type { Catalogue } from "../types/catalogue.type"
 
 function isCatalogueKey(key: string, text: Catalogue): key is keyof Catalogue {
   return Object.hasOwn(text, key)

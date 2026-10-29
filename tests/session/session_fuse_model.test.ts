@@ -92,4 +92,34 @@ describe("the session drawing", () => {
 
     expect(crossings).toEqual([])
   })
+
+  it("lays the minutes out as a grid when asked, places them at once, and lets them run out without a collision", () => {
+    const time = clock()
+    const model = sessionFuseModel({ reducedMotion: false, cells: 15, columns: 5, viewHeight: 4.4, clock: time.read })
+
+    model.show(15, true)
+    const full = model.frame(time.read())
+
+    expect(full.settled).toBe(true)
+    expect(cubes(full.boxes)).toHaveLength(15)
+    expect(model.camera.viewHeight).toBe(4.4)
+    expect(new Set(full.boxes.filter((box) => box.id.startsWith("pad-")).map((box) => box.center[2])).size).toBe(3)
+
+    for (let left = 14; left >= 0; left -= 1) {
+      model.show(left)
+      time.advance(0.12)
+
+      for (const [index, box] of model.frame(time.read()).boxes.entries()) {
+        for (const other of model.frame(time.read()).boxes.slice(index + 1)) {
+          expect(overlapping(box, other), `${box.id} and ${other.id}`).toBe(false)
+        }
+      }
+    }
+
+    time.advance(5)
+    const spent = model.frame(time.read())
+
+    expect(spent.settled).toBe(true)
+    expect(cubes(spent.boxes)).toEqual([])
+  })
 })

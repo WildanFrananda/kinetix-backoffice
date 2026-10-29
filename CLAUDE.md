@@ -22,7 +22,7 @@ address, staff ranges, addresses, server names or anything from the infrastructu
 Bun 1.4.4 (toolchain image `oven/bun:1.4.4-slim`, pinned by digest), TanStack Start in SPA mode on Vite 8, React 19,
 TanStack Router, Query and Form, React Aria Components, Valibot, `qrcode.react`, Motion 14.2.0 (animation), Three.js
 0.186.1 (the technical drawings: WebGL 2 first, SVG where there is none, never in the initial load), Phosphor icons
-2.1.10, CSS Modules over the shared tokens
+2.1.10 (drawn through generated single-weight components, see "Icons"), CSS Modules over the shared tokens
 with generated declarations (`typed-css-modules`), TypeScript 7, Biome with the estate's GritQL plugins, Vitest with
 jsdom and Testing Library (run under Bun: `bunx --bun vitest`), `axe-core` in the component tests, `@babel/parser` for
 the layout check, Playwright 1.64.1 with `otpauth` for the lab E2E. Production is the static build on
@@ -34,6 +34,7 @@ the layout check, Playwright 1.64.1 with `otpauth` for the lab E2E. Production i
 bin/dev bin/ci          # install, Biome, layout, CSS-module types + tsc, Vitest, build, bundle budget, leak rules
 bin/dev bun scripts/check_layout.ts --fix   # insert the blank lines the house style asks for
 bin/dev bun run css-types   # regenerate src/**/*.module.d.css.ts after changing a CSS module
+bin/dev bun run icons   # regenerate src/ui/icons/ after changing scripts/icon_set.ts
 bin/dev bun run build   # dist/client (the app) and dist/nginx/csp.conf
 bin/dev down            # remove the toolchain's volumes
 KINETIX_BFF_TARGET=https://localhost:8443 bun run dev   # on the laptop: hot reload against the lab's edge
@@ -144,7 +145,8 @@ stays the docs' (`BACKOFFICE.md` §5): no gradient, glow, pill or hover lift. Wh
 - **Motion** (`src/ui/motion/`): `LazyMotion` loads its features after the first render (`motion_features.ts`), and
   `MotionConfig reducedMotion="user"`. Overlays (palette, drawer) animate with CSS on React Aria's
   `data-entering`/`data-exiting`, which React Aria waits for before unmounting.
-- **Icons**: Phosphor, regular weight, 18 px by default (`IconDefaults`), `aria-hidden` beside visible text.
+- **Icons**: Phosphor, regular weight, 18 px by default (`IconDefaults`), `aria-hidden` beside visible text. Since
+  2026-10-29 through `src/ui/icons/` only (see "Icons").
 - **3D** (`src/three/`, `src/ui/drawing/Drawing.tsx`): the sign-in shows a technical drawing, a rack with parcels in
   ink lines, exploded then assembled, turning slowly; static under reduced motion. It loads only at 64rem and wider,
   after the form, and stops drawing out of sight. **WebGL 2 first, SVG when the browser has none** (the user,
@@ -243,8 +245,8 @@ consulted for the queue, the confirmation and the motion rules.
   the account page's are `src/catalogue/account/` the same way. In the shell's catalogue they cost about 4 KiB of the
   initial load in two languages; the budget stood at 199.1 KiB with them there. A later feature does the same.
 - **Budget**: 197.0 KiB of 200 on 2026-10-28 (from 192.6; 197.6 on 2026-10-29): two sidebar icons (Phosphor ships all six weights per icon),
-  the routes' search validation and the shell's new keys. Headroom is about 3 KiB; each later screen adds a sidebar
-  icon and a route, so F4 should expect to buy room (a single-weight icon set, or the sidebar's icons lazy).
+  the routes' search validation and the shell's new keys. The single-weight icons bought the room back (189.2 KiB,
+  "Icons"); the categories' route and sidebar icon took it to 190.7.
 - **Contract.** Calls with path values are checked against the documented template (`{id}` matches one segment) and
   must fill every documented path field (`tests/contract/endpoints.test.ts`); a wrong path was planted and caught.
 - **The page tests and the request governor.** `governor.ts` is one module-level window of 80 requests a minute, so a
@@ -258,6 +260,61 @@ consulted for the queue, the confirmation and the motion rules.
   2026-10-29 with the counts and the courier reject, same four setups: the counts move at once on a decision (a seller
   approval 2/4/8 to 3/5/9, a courier rejection 0/0/1 to 1/1/2), the rejected sheet lands in the right-hand tray (SVG,
   58 paths for couriers), a rejected courier reads "Rejected … ago", no overflow at 390.
+
+## Icons (2026-10-29)
+
+Every Phosphor component carries all six weights as React elements in a `Map`, so each icon in the shell cost about
+0.8 KiB of the initial load whatever weight was drawn: 13 of them were about 10 KiB of the 197.6. `src/ui/icons/` holds
+one component per icon with only the weights the app draws (`scripts/icon_set.ts`: regular everywhere, thin for the
+two drawings' fallbacks), written by `bun run icons` (`scripts/generate_icons.ts`) from the installed package's own
+definitions (`dist/defs/`, read by file path because the package does not export them) and drawn by Phosphor's
+`IconBase`, so `IconContext` (size, weight) works as before. The initial load fell to 189.2 KiB.
+`tests/ui/icons.test.tsx` renders every generated icon in every listed weight beside Phosphor's own and requires the
+same markup, requires the directory to be exactly the set, and refuses any import of an icon component from
+`@phosphor-icons/react` outside it (`IconBase`, `IconContext` and the types stay allowed). A changed path and a
+planted import were both caught. A new icon is a line in `icon_set.ts` and `bun run icons`; a Phosphor upgrade is the
+same command, and the test says whether anything moved.
+
+## Categories (F4, 2026-10-29)
+
+`/catalog/categories` (`src/features/categories/`) follows `kinetix-docs` `apis/rest/backoffice/categories`: list,
+create, rename, delete. No API gap: catalog's five endpoints were in production and documented. `getCategory` is not
+called, because the list holds every category with all three fields.
+
+- **One list, one editor.** Catalog answers every category at once, in no guaranteed order, so the page sorts by name
+  (`Intl.Collator`, the admin's locale) and filters on the client by name, slug or id. The selection (`selected`) or
+  the new form (`creating`) lives in the address, changed with `inPlace` (now `src/ui/in_place.ts`, shared with the
+  approvals). The editor is keyed by the category, so choosing another one starts a fresh form.
+- **The rules catalog documents** are checked before asking (`category_rules.ts`): a name trimmed, not blank, at most
+  128 characters counted as catalog counts them (code points, not UTF-16 units), no NUL; a slug of 1 to 128 ASCII
+  letters, digits, hyphens or underscores (`_SLUG` in catalog's `category_service.py`). The name is sent trimmed, as
+  catalog stores it. Catalog still decides: its own 400 names the field (`field` is now read into every refusal,
+  `read_error_body.ts`), and the page says which field and quotes catalog's words.
+- **A new category's slug follows its name** (`slug_of.ts`: NFKD, marks dropped, lower case, runs of anything else
+  become one hyphen, cut to 128 without a trailing hyphen) until the admin types in the slug field. Renaming never
+  touches the slug.
+- **Changing a slug is warned about.** Pricing's category discounts target a slug (`target_category_id`, compared with
+  the item's category in `default_discount_evaluator.rs`), so a discount set on the old slug stops applying; the form
+  says so as soon as the slug differs. A rename also says that search follows at its next sync (catalog marks the
+  products in the same transaction).
+- **Refusals.** `CATEGORY_TAKEN` (409) and `CATEGORY_IN_USE` (409, with catalog's sentence naming the count) are
+  explained in the admin's language with catalog's words quoted (`<q lang="en">`); `CATEGORY_NOT_FOUND` reads the list
+  again, because someone else deleted it. Delete is confirmed in an `alertdialog` with Cancel focused.
+- **The cabinet** (`cabinet_model.ts`, `CabinetFigure.tsx`, the user's request for an animation here): the categories as
+  a card-catalogue cabinet, one drawer each in the list's order, at most four drawers wide. The chosen one slides out in
+  the accent; a new category's drawer drops in, a deleted one lifts away, and the others move to their new places. The
+  camera is fitted to the cabinet's shape, so the figure is keyed by columns × rows and starts again only when the shape
+  changes. `tests/categories/cabinet_model.test.ts` refuses any two boxes passing through each other.
+- **Keys** (`src/ui/use_page_keys.ts`, `src/ui/KeyHints.tsx`, shared with the stock screen; approvals keep their own hook
+  and now share `typing_target.ts`): J/K move through the list as filtered, N opens the new form, / goes to the filter,
+  D asks to delete the chosen category. Ignored while typing or with a dialog open, like the approvals' keys.
+- **Tests**: `tests/categories/` (the page with axe, create, the slug rule, taken, rename and the warning, a category
+  deleted by someone else, in use then deleted, the keys; the slug and the rules; the cabinet). Contract: four calls,
+  150 checks.
+- **Seen in Chrome over CDP** against a stateful stub edge, 1280 light with WebGL, 1280 dark without, 390 dark: list,
+  select, the slug warning, create with the slug following, the in-use refusal in the dialog, delete; the sellers'
+  page and its tray drawn with the generated icons. No overflow; the one console line is the 409 the stub answers on
+  purpose. Not run: the lab E2E.
 
 ## The account page (2026-10-29)
 
@@ -275,6 +332,74 @@ the drawing and the sentence only; the edge decides, and `expiresAt` is the trut
 once a minute while the admin is present (reading it does not extend it). Shown from 48rem. Tests:
 `tests/session/session_fuse_model.test.ts` (no two boxes pass through each other), `account_page.test.tsx` (axe, the
 stay flow). Tweening moved to `src/three/moving_piece.ts`, shared with the tray.
+
+## Stock (F4, 2026-10-29)
+
+`/warehouse/stock` (`src/features/stock/`) follows `kinetix-docs` `apis/rest/backoffice/stock-intake`, written the same
+day against warehouse v1.4.0: the bins (`warehouse.listBins`), what each holds (`warehouse.listStock`), booking goods in
+(`catalog.getProduct` then `warehouse.receiveStock`), adjusting (`warehouse.adjustStock`), creating and editing bins
+(`warehouse.upsertBin`) and the ledger (`warehouse.listReceipts`, `warehouse.listAdjustments`).
+
+- **Keyset paging everywhere**: bins by code (`after`, `nextAfter`, in the address), a bin's rows by id (`after`), the
+  ledger newest first (`before`). Warehouse's snake_case is turned into camelCase types in `stock_schemas.ts`.
+- **The owner comes from catalog.** Booking in asks catalog for the SKU first and sends that product's
+  `merchant_principal_id`; a SKU catalog does not sell (404) or names no merchant cannot be booked. An adjustment takes
+  the merchant from its row; a row that names none is refused by warehouse, and the dialog says so before asking.
+- **Idempotency keys**: one `crypto.randomUUID()` per dialog, kept across retries until a final answer (a timeout, a 5xx
+  or a lost connection says "send it again": the same request is booked once), renewed only after
+  `IDEMPOTENCY_KEY_CONFLICT`. Removal is checked against the row's `available` before asking; warehouse's `409` with
+  `max_reduction` (the reserve moved first) is shown with that number.
+- **Warehouse's refusals** are often `{ "error": "<sentence>" }` with no `message`: `read_error_body.ts` now reads a bare
+  `error` as a code when it is upper snake case, else as the message, and every refusal carries the numbers its body
+  holds (`numbers`, e.g. `max_reduction`, catalog's `product_count`). Without this the contract test failed every
+  warehouse refusal as unreadable.
+- **The racks** (`bin_rack_model.ts`, `RackFigure.tsx`): the page's bins as a technical drawing, a rack per zone, shelf
+  levels by rank (a level of two billion draws as the next shelf up), a stocked bin tall and an empty one flat; the
+  chosen bin slides out like a drawer in the accent. Real data only, still once settled. The painters read the camera
+  once, so the camera is fitted to the page's bins when the model is made and the figure is keyed by the page cursor.
+  `tests/stock/bin_rack_model.test.ts` refuses any two boxes passing through each other.
+- **Keys**: J/K move through the page's bins, B opens booking in and E the bin's edit form for the chosen bin (through
+  `BinRequest`, a counter `BinDetail` reacts to), N a new bin, / the SKU finder.
+- **Finding a SKU** (`SkuFinder`, `sku` in the address) lists every bin holding it; a bin chosen from there may sit on
+  another page of bins, so `BinDetail` works from the code alone and takes the zone and level from its rows.
+- **Width at 390, found in Chrome**: Chrome's mobile emulation widens the layout viewport to fit content, so
+  `scrollWidth - innerWidth` read 0 while the page was 461 px wide. The cause was the shelf table's visually hidden
+  header text: `position: absolute`, its containing block outside `.tableFrame`, so `overflow-x: auto` did not clip it.
+  `.tableFrame` is `position: relative` now, and the detail grids are `minmax(0, 1fr)`. Measure `innerWidth` itself.
+  The overlays of approvals, categories and stock got `grid-template-columns: minmax(0, 1fr)`, so a modal's
+  `width: min(…, 100%)` resolves against the viewport rather than its content.
+- **Tests**: `tests/stock/` (the page with axe, a bin's shelf and ledger, booking in with the key and the catalog owner,
+  a SKU not on sale, an adjustment over what is free and warehouse's own limit, the SKU finder, a new bin; the rack
+  model). Contract: eight calls, 198 checks. Seen in Chrome over CDP at 1280 light with WebGL, 1280 dark with SVG and
+  390 dark: every flow, no overflow (by `innerWidth`), no console problem. Not run: the lab E2E.
+- **Budget**: 192.5 KiB (the route and two sidebar icons since 190.7). `tests/ui/icons.test.tsx` imports the generated
+  icons by path at run time (`@vite-ignore`): Vitest's module cache (`node_modules/.vitest-cache` in the toolchain
+  volume) kept the old list of files behind a template `import()`, and four new icons read as unknown.
+
+## When the session ends (2026-10-29)
+
+The user saw "This page could not be shown … Reference: Error" when a session ended, and asked for an animation instead.
+The error was a redirect loop, reproduced in Chrome and in `tests/session/session_end.test.tsx`: `SessionWatch` stayed
+mounted while the navigation to `/sign-in` was pending, read the pending location (`state.location`, already
+`/sign-in?redirect=…`) and navigated again with that as the way back, so each render nested the address once more until
+React stopped it (#185, "Maximum update depth exceeded", a plain `Error`); the test also shows the address passing 2048
+characters. Now:
+
+- **One way out.** `leaveSession` runs once at a time (a second call joins the first), and every path takes it: a query
+  or mutation answered signed-out (`sessionLost` in `router.tsx`), `SessionWatch` reading `authenticated: false`, a
+  sign-out in another tab, the sign-out button. The way back is the location the admin was on
+  (`state.resolvedLocation`), and nothing leaves from `/sign-in` itself.
+- **The session read survives.** After navigating, `leaveSession` removes every query except the session's instead of
+  `clear()`: a cleared query cancels its fetch silently, and a silent cancel rejects even with data, which would have
+  thrown TanStack Query's `CancelledError` (whose `name` is `Error`) out of `/sign-in`'s `beforeLoad`. The other
+  queries still go, so no admin's data stays in the tab for the next sign-in.
+- **The animation.** On `/sign-in?notice=session-ended`, from 64rem, the sign-in's figure becomes the account page's
+  session fuse (`SessionEndedFigure`): the fifteen idle minutes as a five-by-three grid of cubes, placed at once, which
+  lift away one by one in the accent until the pads are empty, then the drawing stops. It starts only when a painter has
+  drawn (`Drawing`'s `onDrawn`), because over Tor the three.js chunk can take seconds and the countdown would otherwise
+  be over before the first frame. Under reduced motion it shows the empty pads. `sessionFuseModel` gained `columns`,
+  `viewHeight` and `show(n, placed)`; the account page's row is unchanged. Seen in Chrome over CDP with WebGL (light) and
+  SVG (dark): full at 0.7 s, emptying at 1.4–2.6 s, empty and still at 4.5 s.
 
 ## Files shared with kinetix-docs
 
@@ -356,6 +481,6 @@ E2E_BASE_URL=http://<the lab's onion address> E2E_TOR_PROXY=socks5://kxlab-tor-c
 
 ## Not yet here
 
-- ⌘K jumps between the screens that exist (the two queues included) and switches theme and language; lookups of an
-  order, a job, an application or a SKU by id are not built yet.
+- ⌘K jumps between the screens that exist (the two queues and the categories included) and switches theme and
+  language; lookups of an order, a job, an application or a SKU by id are not built yet.
 - A reason with a rejection: identity stores none, for sellers or couriers (infra `BACKOFFICE.md` §7.2).

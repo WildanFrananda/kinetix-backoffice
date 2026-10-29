@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router"
-import { approvalsSearch, inPlace } from "../../features/approvals/approvals_search"
+import { approvalsSearch } from "../../features/approvals/approvals_search"
 import { CourierApprovalsPage } from "../../features/approvals/CourierApprovalsPage"
 import type { ApprovalsSearch } from "../../types/approvals_search.type"
+import { inPlace } from "../../ui/in_place"
 
 function CourierApprovalsRoute() {
   const search = Route.useSearch()

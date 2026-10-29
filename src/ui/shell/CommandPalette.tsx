@@ -1,4 +1,3 @@
-import { MagnifyingGlass } from "@phosphor-icons/react"
 import { useNavigate } from "@tanstack/react-router"
 import {
   Autocomplete,
@@ -15,6 +14,7 @@ import {
 } from "react-aria-components"
 import { useSignOut } from "../../features/session/use_sign_out"
 import { useText } from "../../i18n/use_text"
+import { MagnifyingGlass } from "../icons/MagnifyingGlass"
 import styles from "./CommandPalette.module.css"
 import { paletteGroups } from "./palette_groups"
 

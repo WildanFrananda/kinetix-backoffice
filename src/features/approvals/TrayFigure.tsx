@@ -1,9 +1,9 @@
-import { Tray } from "@phosphor-icons/react"
 import { useLocale } from "../../i18n/use_locale"
 import type { DecisionOutcome } from "../../types/decision_outcome.type"
 import type { PeriodTally } from "../../types/period_tally.type"
 import type { TrayModel } from "../../types/tray_model.type"
 import { Drawing } from "../../ui/drawing/Drawing"
+import { Tray } from "../../ui/icons/Tray"
 import styles from "./Approvals.module.css"
 import { useApprovalsText } from "./approvals_text"
 

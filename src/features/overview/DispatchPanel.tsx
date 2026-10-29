@@ -1,7 +1,7 @@
-import { Truck } from "@phosphor-icons/react"
 import { useQuery } from "@tanstack/react-query"
 import { useText } from "../../i18n/use_text"
 import { Figure } from "../../ui/Figure"
+import { Truck } from "../../ui/icons/Truck"
 import { Panel } from "../../ui/Panel"
 import { PanelProblem } from "../../ui/PanelProblem"
 import styles from "./Overview.module.css"

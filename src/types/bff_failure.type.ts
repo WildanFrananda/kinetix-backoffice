@@ -33,6 +33,8 @@ type BffFailure =
       status: number
       code: string | null
       message: string
+      field: string | null
+      numbers: Readonly<Record<string, number>>
       requestId: string | null
     }
   | {

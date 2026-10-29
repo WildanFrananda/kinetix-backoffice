@@ -1,8 +1,12 @@
-import { Desktop, Moon, SignOut, Sun, Translate } from "@phosphor-icons/react"
 import { chooseLocale } from "../../i18n/locale_store"
 import type { Catalogue } from "../../types/catalogue.type"
 import type { NavItem } from "../../types/nav_item.type"
 import type { PaletteGroup } from "../../types/palette_group.type"
+import { Desktop } from "../icons/Desktop"
+import { Moon } from "../icons/Moon"
+import { SignOut } from "../icons/SignOut"
+import { Sun } from "../icons/Sun"
+import { Translate } from "../icons/Translate"
 import { chooseTheme } from "../theme_store"
 import { navigation } from "./navigation"
 

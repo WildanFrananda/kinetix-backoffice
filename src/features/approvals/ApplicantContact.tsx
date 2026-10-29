@@ -1,6 +1,6 @@
-import { UserCircle } from "@phosphor-icons/react"
 import { useQuery } from "@tanstack/react-query"
 import { CopyValue } from "../../ui/CopyValue"
+import { UserCircle } from "../../ui/icons/UserCircle"
 import styles from "./Approvals.module.css"
 import { applicantProfileQuery } from "./approvals_queries"
 import { useApprovalsText } from "./approvals_text"

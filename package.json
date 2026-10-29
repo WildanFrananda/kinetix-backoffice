@@ -11,13 +11,15 @@
     "format": "biome format --write .",
     "typecheck": "tcm -a -s -l -p \"src/**/*.module.css\" . && tsc -p tsconfig.json --noEmit",
     "test": "bunx --bun vitest run",
-    "css-types": "tcm -a -s -p \"src/**/*.module.css\" ."
+    "css-types": "tcm -a -s -p \"src/**/*.module.css\" .",
+    "icons": "bun scripts/generate_icons.ts"
   },
   "dependencies": {
     "@fontsource-variable/ibm-plex-sans": "5.3.0",
     "@fontsource-variable/source-serif-4": "5.3.1",
     "@fontsource/ibm-plex-mono": "5.3.0",
     "@phosphor-icons/react": "2.1.10",
+    "@simplewebauthn/browser": "14.0.0",
     "@tanstack/react-form": "1.33.5",
     "@tanstack/react-query": "5.105.0",
     "@tanstack/react-router": "1.170.46",

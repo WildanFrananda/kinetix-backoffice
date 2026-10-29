@@ -1,0 +1,22 @@
+.keys {
+  display: none;
+  flex-wrap: wrap;
+  gap: 0.375rem 1rem;
+  margin: 0;
+  padding: 0;
+  color: var(--kx-gray-3);
+  font-size: 0.8125rem;
+  list-style: none;
+}
+
+.keys li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+@media (min-width: 48rem) {
+  .keys {
+    display: flex;
+  }
+}

@@ -1,4 +1,3 @@
-import { SignOut } from "@phosphor-icons/react"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "react-aria-components"
 import { accountQuery, sessionQuery } from "../../api/session_query"
@@ -6,6 +5,7 @@ import { useSignOut } from "../../features/session/use_sign_out"
 import { formatText } from "../../i18n/format_text"
 import { useLocale } from "../../i18n/use_locale"
 import { useText } from "../../i18n/use_text"
+import { SignOut } from "../icons/SignOut"
 import styles from "./AccountBlock.module.css"
 
 function AccountBlock() {
