@@ -4,12 +4,26 @@ import { failureOf } from "../../src/api/failure_of"
 import { backofficeCalls, otherAppOnly, sellerExamples } from "./backoffice_calls"
 import { docsEndpoint } from "./docs_endpoints"
 
+function pathPattern(template: string): RegExp {
+  const pieces = template.split(/\{[^}]+\}/).map((piece) => piece.replace(/[.*+?^$()|[\]\\]/g, "\\$&"))
+
+  return new RegExp(`^${pieces.join("[^/]+")}$`)
+}
+
 describe.each(backofficeCalls.map((call) => [call.endpoint, call] as const))("%s", (_, call) => {
   it("uses the documented method and path, through the edge", async () => {
     const endpoint = await docsEndpoint(call.endpoint)
     expect(call.method).toBe(endpoint.method)
     const viaEdge = endpoint.path.startsWith("/bff/") ? endpoint.path : `/bff${endpoint.path}`
-    expect(call.path).toBe(viaEdge)
+    expect(call.path).toMatch(pathPattern(viaEdge))
+  })
+
+  it("fills every documented path value", async () => {
+    const endpoint = await docsEndpoint(call.endpoint)
+    const named = [...endpoint.path.matchAll(/\{([^}]+)\}/g)].map((match) => match[1])
+    const documented = endpoint.request.fields.filter((field) => field.in === "path").map((field) => field.name)
+    expect(named.sort()).toEqual(documented.sort())
+    expect(call.path).not.toMatch(/[{}]/)
   })
 
   it("sends exactly the documented body fields, every required one included", async () => {

@@ -1,5 +1,6 @@
-import { Stamp } from "@phosphor-icons/react"
+import { ArrowRight, Stamp } from "@phosphor-icons/react"
 import { useQuery } from "@tanstack/react-query"
+import { Link } from "@tanstack/react-router"
 import { formatText } from "../../i18n/format_text"
 import { useLocale } from "../../i18n/use_locale"
 import { useText } from "../../i18n/use_text"
@@ -67,6 +68,16 @@ function ApprovalsPanel({ poll }: { poll: boolean }) {
           />
         </dl>
       )}
+      <p className={styles.links}>
+        <Link to="/approvals/sellers" className={styles.link}>
+          {text["overview.approvals.reviewSellers"]}
+          <ArrowRight aria-hidden="true" />
+        </Link>
+        <Link to="/approvals/couriers" className={styles.link}>
+          {text["overview.approvals.reviewCouriers"]}
+          <ArrowRight aria-hidden="true" />
+        </Link>
+      </p>
     </Panel>
   )
 }

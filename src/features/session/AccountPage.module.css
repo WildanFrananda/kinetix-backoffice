@@ -1,29 +1,117 @@
-.facts {
+.layout {
   display: grid;
-  max-width: 44rem;
-  grid-template-columns: minmax(8rem, max-content) minmax(0, 1fr);
-  margin: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2.5rem;
 }
 
-.facts dt,
-.facts dd {
-  margin: 0;
-  padding: 0.6rem 0;
-  border-bottom: 1px solid var(--kx-rule);
+.identity,
+.session {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  min-width: 0;
+  padding-top: 0.875rem;
+  border-top: 2px solid var(--kx-fg);
 }
 
-.facts dt {
-  padding-right: 1rem;
+.kicker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
   font-family: var(--kx-font-mono);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--kx-gray-3);
 }
 
-.mono {
+.countdown {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.875rem;
+  margin: 0;
+}
+
+.clock {
   font-family: var(--kx-font-mono);
+  font-size: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.clockLabel {
+  color: var(--kx-gray-2);
+}
+
+.endsAt {
+  max-width: 40rem;
+  margin: 0;
+  color: var(--kx-gray-2);
+}
+
+.figure {
+  display: none;
+  margin: 0;
+}
+
+.drawing {
+  aspect-ratio: 3 / 1;
+  border-bottom: 1px solid var(--kx-rule);
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding-top: 0.625rem;
+}
+
+.legend dt {
+  font-family: var(--kx-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--kx-gray-3);
+}
+
+.legend dd {
+  margin: 0.125rem 0 0;
+  font-family: var(--kx-font-mono);
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.legend dd[data-tone="attention"] {
+  color: var(--kx-accent);
+}
+
+.legend > div + div {
+  padding-left: 1rem;
+  border-left: 1px solid var(--kx-rule);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (min-width: 48rem) {
+  .figure {
+    display: block;
+  }
+}
+
+@media (min-width: 64rem) {
+  .layout {
+    grid-template-columns: minmax(18rem, 2fr) minmax(0, 3fr);
+    gap: 3rem;
+  }
 }

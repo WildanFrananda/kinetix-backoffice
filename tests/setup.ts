@@ -12,8 +12,16 @@ function quietMediaQuery(query: string): MediaQueryList {
   })
 }
 
+function scrollNowhere(): void {
+  return
+}
+
 if (typeof window.matchMedia !== "function") {
   window.matchMedia = quietMediaQuery
+}
+
+if (typeof Element.prototype.scrollIntoView !== "function") {
+  Element.prototype.scrollIntoView = scrollNowhere
 }
 
 afterEach(() => {

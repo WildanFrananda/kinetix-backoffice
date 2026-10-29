@@ -1,6 +1,6 @@
 type DrawingHandle = {
   resize: (width: number, height: number) => void
-  setRunning: (running: boolean) => void
+  setVisible: (visible: boolean) => void
   dispose: () => void
 }
 
