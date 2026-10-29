@@ -424,6 +424,10 @@ cannot work at all, and Tor Browser ships WebAuthn off), so the account page sho
 - **Refusals when adding**: a wrong password, `PASSKEY_LIMIT`, `TWO_FACTOR_REQUIRED`, `PASSKEY_EXISTS` (also caught
   earlier as the browser's `InvalidStateError`, because `excludeCredentials` lists the account's own),
   `PASSKEY_INVALID` and `PASSKEY_CHALLENGE_INVALID` each have their own words; every attempt asks for fresh options.
+  The browser's `SecurityError` (the page's host is not the relying party: the WireGuard face in production, the dev
+  server on `localhost:3000` in the lab) says the passkey belongs to the backoffice's own address. Until 2026-10-29 it
+  read as "could not be created", which the user hit on the dev server; passkeys are tried on the lab's
+  `https://backoffice.localhost:8443`.
 - **Tests**: `tests/passkeys/` with the library mocked at the module boundary (the device's ceremony cannot run in jsdom).
 - **Seen against the lab** (2026-10-29, Chrome over CDP, `WebAuthn.addVirtualAuthenticator` ctap2/internal with user
   verification, `--ignore-certificate-errors` and `--host-resolver-rules` for `backoffice.localhost`): add, sign out,

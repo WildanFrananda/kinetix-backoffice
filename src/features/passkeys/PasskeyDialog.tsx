@@ -16,7 +16,7 @@ import { useAccountText } from "../session/account_text"
 import styles from "./Passkeys.module.css"
 import { passkeyFailure } from "./passkey_failure"
 import { passkeysKey } from "./passkey_queries"
-import { makePasskey, passkeyAlreadyHere, passkeyDeclined } from "./webauthn"
+import { makePasskey, passkeyAlreadyHere, passkeyDeclined, passkeyElsewhere } from "./webauthn"
 
 const nameLimit = 64
 
@@ -65,6 +65,11 @@ function PasskeyDialog({
 
       if (passkeyAlreadyHere(error)) {
         setProblem(text["account.security.already"])
+        return
+      }
+
+      if (passkeyElsewhere(error)) {
+        setProblem(text["account.security.elsewhere"])
         return
       }
 

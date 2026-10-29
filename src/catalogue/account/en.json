@@ -57,6 +57,7 @@
   "account.security.already": "This device already holds a passkey for this account.",
   "account.security.declined": "The device did not create a passkey. Nothing was added.",
   "account.security.failed": "The passkey could not be created. Nothing was added.",
+  "account.security.elsewhere": "The browser refused: passkeys belong to the backoffice's own address, and this page is open at another one, such as the staff VPN's. Add the passkey from the onion address in Tor Browser. Nothing was added.",
   "account.security.unverified": "The server could not verify the device's answer. Nothing was added; try again.",
   "account.security.expired": "That took too long and the request expired. Nothing was added; try again.",
   "account.security.addedNotice": "Added “{name}”. Your next sign-in can use it.",

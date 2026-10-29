@@ -31,10 +31,14 @@ function passkeyDeclined(error: unknown): boolean {
   return error.name === "NotAllowedError" || error.name === "AbortError" || code === "ERROR_CEREMONY_ABORTED"
 }
 
+function passkeyElsewhere(error: unknown): boolean {
+  return error instanceof Error && error.name === "SecurityError"
+}
+
 function passkeyAlreadyHere(error: unknown): boolean {
   return (
     error instanceof Error && (error as Error & { code?: unknown }).code === "ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED"
   )
 }
 
-export { askForPasskey, makePasskey, passkeyAlreadyHere, passkeyDeclined, supportsPasskeys }
+export { askForPasskey, makePasskey, passkeyAlreadyHere, passkeyDeclined, passkeyElsewhere, supportsPasskeys }
