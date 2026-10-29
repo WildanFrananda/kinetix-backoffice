@@ -21,6 +21,35 @@ async function makePasskey(options: PublicKeyCredentialCreationOptionsJSON): Pro
   return startRegistration({ optionsJSON: options })
 }
 
+async function forgetPasskey(rpId: string, credentialId: string): Promise<void> {
+  if (!supportsPasskeys() || typeof PublicKeyCredential.signalUnknownCredential !== "function") {
+    return
+  }
+
+  await PublicKeyCredential.signalUnknownCredential({ rpId, credentialId }).catch(() => undefined)
+}
+
+async function keepOnlyPasskeys(principalId: string, credentialIds: readonly string[]): Promise<void> {
+  if (!supportsPasskeys() || typeof PublicKeyCredential.signalAllAcceptedCredentials !== "function") {
+    return
+  }
+
+  await PublicKeyCredential.signalAllAcceptedCredentials({
+    rpId: window.location.hostname,
+    userId: userHandleOf(principalId),
+    allAcceptedCredentialIds: [...credentialIds]
+  }).catch(() => undefined)
+}
+
+function userHandleOf(principalId: string): string {
+  const bytes = new TextEncoder().encode(principalId)
+
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/u, "")
+}
+
 function passkeyDeclined(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false
@@ -41,4 +70,14 @@ function passkeyAlreadyHere(error: unknown): boolean {
   )
 }
 
-export { askForPasskey, makePasskey, passkeyAlreadyHere, passkeyDeclined, passkeyElsewhere, supportsPasskeys }
+export {
+  askForPasskey,
+  forgetPasskey,
+  keepOnlyPasskeys,
+  makePasskey,
+  passkeyAlreadyHere,
+  passkeyDeclined,
+  passkeyElsewhere,
+  supportsPasskeys,
+  userHandleOf
+}

@@ -16,7 +16,7 @@ import { useAccountText } from "../session/account_text"
 import styles from "./Passkeys.module.css"
 import { passkeyFailure } from "./passkey_failure"
 import { passkeysKey } from "./passkey_queries"
-import { makePasskey, passkeyAlreadyHere, passkeyDeclined, passkeyElsewhere } from "./webauthn"
+import { forgetPasskey, makePasskey, passkeyAlreadyHere, passkeyDeclined, passkeyElsewhere } from "./webauthn"
 
 const nameLimit = 64
 
@@ -45,11 +45,17 @@ function PasskeyDialog({
         return { kind: "removed", name: removing.name }
       }
 
-      const enrolment = await bffFetch(passkeyEnrolmentCall(userId))
+      const enrolment = await bffFetch(passkeyEnrolmentCall(userId, password))
       const credential = await makePasskey(enrolment.options)
       const added = await bffFetch(
-        registerPasskeyCall(userId, { challengeId: enrolment.challengeId, name: name.trim(), password, credential })
-      )
+        registerPasskeyCall(userId, { challengeId: enrolment.challengeId, name: name.trim(), credential })
+      ).catch(async (error: unknown) => {
+        if (error instanceof BffError && error.failure.kind === "refused") {
+          await forgetPasskey(enrolment.options.rp.id ?? window.location.hostname, credential.id)
+        }
+
+        throw error
+      })
 
       return { kind: "added", name: added.name }
     },
