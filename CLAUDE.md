@@ -416,7 +416,12 @@ cannot work at all, and Tor Browser ships WebAuthn off), so the account page sho
   this refuses the key, so this one must be in production before the edge starts sending it (PASSKEYS.md, "Order").
 - **Security on the account page** (`src/features/passkeys/`): the code (on), the passkeys (name, added, last used,
   synced or this device only), add (a name and the password, then the device's prompt) and remove (the password; Cancel
-  focused). Options and answers are validated with Valibot against the library's JSON types (`exactOptional`, because
+  focused). The password goes with the creation options, before the device makes anything (identity v1.7.1): until
+  2026-10-29 it went with the registration, so a wrong one left a passkey in Google Password Manager that identity
+  never stored. The browser is told what identity holds through WebAuthn's signal API where it exists (Chrome; not Tor
+  Browser): `signalAllAcceptedCredentials` with the list's `credentialId`s each time the list is read (user handle =
+  base64url of the principal id, as identity sets it; relying party = the page's host), and `signalUnknownCredential`
+  for a credential identity refused (a 4xx, never an outage, when it may have been stored). Options and answers are validated with Valibot against the library's JSON types (`exactOptional`, because
   `exactOptionalPropertyTypes` is on).
 - **Not in the contract test yet**: the six calls (`edge.passkeyOptions`, `edge.verifyPasskey`, `identity.listPasskeys`,
   `identity.passkeyRegistrationOptions`, `identity.registerPasskey`, `identity.removePasskey`) join

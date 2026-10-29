@@ -149,7 +149,9 @@ function AccountPage() {
           </div>
         </m.section>
       </m.div>
-      {account.data === undefined ? null : <SecurityPanel userId={account.data.userId} />}
+      {account.data === undefined ? null : (
+        <SecurityPanel userId={account.data.userId} principalId={account.data.principalId} />
+      )}
     </>
   )
 }

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { m } from "motion/react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { BffError } from "../../api/bff_error"
 import { formatText } from "../../i18n/format_text"
 import { useLocale } from "../../i18n/use_locale"
@@ -19,15 +19,24 @@ import { useAccountText } from "../session/account_text"
 import { PasskeyDialog } from "./PasskeyDialog"
 import styles from "./Passkeys.module.css"
 import { passkeysQuery } from "./passkey_queries"
-import { supportsPasskeys } from "./webauthn"
+import { keepOnlyPasskeys, supportsPasskeys } from "./webauthn"
 
-function SecurityPanel({ userId }: { userId: number }) {
+function SecurityPanel({ userId, principalId }: { userId: number; principalId: string }) {
   const text = useAccountText()
   const date = new Intl.DateTimeFormat(useLocale(), { day: "numeric", month: "short", year: "numeric" })
   const passkeys = useQuery(passkeysQuery(userId))
   const [dialog, setDialog] = useState<{ removing: Passkey | null } | null>(null)
   const [report, setReport] = useState<SecurityReport | null>(null)
   const capable = supportsPasskeys()
+
+  useEffect(() => {
+    if (passkeys.data !== undefined) {
+      void keepOnlyPasskeys(
+        principalId,
+        passkeys.data.map((passkey) => passkey.credentialId)
+      )
+    }
+  }, [passkeys.data, principalId])
 
   function list() {
     if (passkeys.isPending) {

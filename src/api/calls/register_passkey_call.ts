@@ -5,7 +5,7 @@ import { passkeySchema } from "../schemas/passkey_schemas"
 
 function registerPasskeyCall(
   userId: number,
-  request: { challengeId: string; name: string; password: string; credential: RegistrationResponseJSON }
+  request: { challengeId: string; name: string; credential: RegistrationResponseJSON }
 ): BffCall<Passkey> {
   return {
     endpoint: "identity.registerPasskey",

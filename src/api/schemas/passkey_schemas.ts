@@ -55,6 +55,7 @@ const enrolmentSchema = v.object({
 
 const passkeySchema = v.object({
   id: v.string(),
+  credentialId: v.string(),
   name: v.string(),
   createdAt: instantSchema,
   lastUsedAt: v.nullable(instantSchema),

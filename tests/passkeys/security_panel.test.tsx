@@ -14,8 +14,17 @@ let bff = fakeBff({})
 
 class WebAuthnCredential {}
 
+const signals = vi.hoisted(() => ({ unknown: vi.fn(), accepted: vi.fn() }))
+
+class SignallingCredential {
+  static signalUnknownCredential = signals.unknown
+
+  static signalAllAcceptedCredentials = signals.accepted
+}
+
 const macbook = {
   id: "5b7c1e2a-9d3f-4a8b-b6c4-2e1f0a9d8c7b",
+  credentialId: "Y3JlZGVudGlhbC1tYWNib29r",
   name: "MacBook Touch ID",
   createdAt: "2026-10-28T09:00:00.000Z",
   lastUsedAt: "2026-10-29T08:00:00.000Z",
@@ -48,6 +57,8 @@ const registration = {
 beforeEach(() => {
   vi.stubGlobal("PublicKeyCredential", WebAuthnCredential)
   ceremony.startRegistration.mockReset()
+  signals.unknown.mockReset().mockResolvedValue(undefined)
+  signals.accepted.mockReset().mockResolvedValue(undefined)
 })
 
 afterEach(() => {
@@ -58,7 +69,7 @@ afterEach(() => {
 function show() {
   return render(
     <AppProviders client={testQueryClient()}>
-      <SecurityPanel userId={7} />
+      <SecurityPanel userId={7} principalId="3ba205b9-457a-4447-9f45-0302c7271b9b" />
     </AppProviders>
   )
 }
@@ -102,10 +113,13 @@ describe("the security panel", () => {
 
     expect(await screen.findByText("Added “MacBook Touch ID”. Your next sign-in can use it.")).toBeInTheDocument()
     expect(ceremony.startRegistration).toHaveBeenCalledWith({ optionsJSON: creation })
+    expect(bff.seen.find((request) => request.route === "POST /bff/api/v1/auth/passkeys/7/options")?.body).toEqual({
+      password: "correct horse"
+    })
+
     expect(bff.seen.find((request) => request.route === "POST /bff/api/v1/auth/passkeys/7")?.body).toEqual({
       challengeId: "ch-1",
       name: "MacBook Touch ID",
-      password: "correct horse",
       credential: registration
     })
 
@@ -136,11 +150,10 @@ describe("the security panel", () => {
     expect(bff.seen.find((request) => request.route.startsWith("DELETE"))?.body).toEqual({ password: "correct horse" })
   })
 
-  it("says a wrong password plainly and adds nothing", async () => {
+  it("checks the password before the device makes anything, so a wrong one leaves no passkey behind", async () => {
     bff = fakeBff({
       "GET /bff/api/v1/auth/passkeys/7": () => Response.json({ passkeys: [] }),
-      "POST /bff/api/v1/auth/passkeys/7/options": () => Response.json({ challengeId: "ch-2", options: creation }),
-      "POST /bff/api/v1/auth/passkeys/7": () =>
+      "POST /bff/api/v1/auth/passkeys/7/options": () =>
         Response.json(
           { message: "Invalid email or password credentials", error: "Unauthorized", statusCode: 401 },
           { status: 401 }
@@ -158,6 +171,43 @@ describe("the security panel", () => {
     await user.click(within(dialog).getByRole("button", { name: "Add passkey" }))
 
     expect(await within(dialog).findByText("That password is not right.")).toBeInTheDocument()
+    expect(ceremony.startRegistration).not.toHaveBeenCalled()
+  })
+
+  it("tells the browser to forget a passkey identity refused, and keeps the list in step with identity's", async () => {
+    vi.stubGlobal("PublicKeyCredential", SignallingCredential)
+    bff = fakeBff({
+      "GET /bff/api/v1/auth/passkeys/7": () => Response.json({ passkeys: [macbook] }),
+      "POST /bff/api/v1/auth/passkeys/7/options": () => Response.json({ challengeId: "ch-5", options: creation }),
+      "POST /bff/api/v1/auth/passkeys/7": () =>
+        Response.json({ error: "PASSKEY_INVALID", message: "Not verified.", traceId: "t-2" }, { status: 400 })
+    })
+
+    ceremony.startRegistration.mockResolvedValue(registration)
+
+    const user = userEvent.setup()
+    render(
+      <AppProviders client={testQueryClient()}>
+        <SecurityPanel userId={7} principalId="3ba205b9-457a-4447-9f45-0302c7271b9b" />
+      </AppProviders>
+    )
+
+    await waitFor(() =>
+      expect(signals.accepted).toHaveBeenCalledWith({
+        rpId: window.location.hostname,
+        userId: "M2JhMjA1YjktNDU3YS00NDQ3LTlmNDUtMDMwMmM3MjcxYjli",
+        allAcceptedCredentialIds: [macbook.credentialId]
+      })
+    )
+
+    await user.click(screen.getByRole("button", { name: "Add a passkey" }))
+    const dialog = await screen.findByRole("dialog")
+    await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "MacBook")
+    await user.type(within(dialog).getByLabelText(/^Password/), "correct horse")
+    await user.click(within(dialog).getByRole("button", { name: "Add passkey" }))
+
+    expect(await within(dialog).findByText(/could not verify the device's answer/)).toBeInTheDocument()
+    expect(signals.unknown).toHaveBeenCalledWith({ rpId: "backoffice.localhost", credentialId: registration.id })
   })
 
   it("says the passkey belongs to another address when the browser refuses this one, and sends nothing", async () => {
