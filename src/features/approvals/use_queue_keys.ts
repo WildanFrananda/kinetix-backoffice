@@ -1,15 +1,6 @@
 import { useEffect, useRef } from "react"
 import type { QueueKeys } from "../../types/queue_keys.type"
-
-const typingTargets = new Set(["INPUT", "TEXTAREA", "SELECT"])
-
-function typing(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) {
-    return false
-  }
-
-  return typingTargets.has(target.tagName) || target.isContentEditable || target.closest("[role='dialog']") !== null
-}
+import { typingTarget } from "../../ui/typing_target"
 
 function useQueueKeys(keys: QueueKeys): void {
   const latest = useRef(keys)
@@ -22,7 +13,7 @@ function useQueueKeys(keys: QueueKeys): void {
         return
       }
 
-      if (typing(event.target) || event.repeat) {
+      if (typingTarget(event.target) || event.repeat) {
         return
       }
 

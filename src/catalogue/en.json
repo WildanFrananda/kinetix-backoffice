@@ -114,6 +114,8 @@
   "signIn.eyebrow": "Staff access",
   "signIn.figureNumber": "Fig. 1",
   "signIn.figureCaption": "Parcels on a rack, exploded and assembled",
+  "signIn.endedFigureNumber": "Fig. 2",
+  "signIn.endedFigureCaption": "The session's minutes, run out",
   "overview.returns.title": "Returns needing attention",
   "overview.returns.caption": "Latest returns, newest first",
   "overview.returns.loading": "Reading returns…",
@@ -121,8 +123,17 @@
   "overview.returns.more": "The {shown} most recent are listed; the figure above counts them all.",
   "nav.sellers": "Seller applications",
   "nav.couriers": "Courier applications",
+  "nav.categories": "Categories",
+  "nav.stock": "Stock",
   "copy.label": "Copy {label}",
   "copy.done": "Copied",
   "overview.approvals.reviewSellers": "Review sellers",
-  "overview.approvals.reviewCouriers": "Review couriers"
+  "overview.approvals.reviewCouriers": "Review couriers",
+  "challenge.passkey.use": "Use a passkey",
+  "challenge.passkey.waiting": "Waiting for the passkey…",
+  "challenge.passkey.or": "Or enter the code from your authenticator app.",
+  "challenge.passkey.declined": "The passkey was not used. Try again, or enter the code.",
+  "challenge.passkey.refused": "That passkey was not accepted. Try again, or enter the code.",
+  "challenge.passkey.unsupported": "This account has a passkey, but this browser cannot use it here. Enter the code instead.",
+  "challenge.passkey.unusable": "This browser could not use a passkey at this address. Enter the code instead."
 }

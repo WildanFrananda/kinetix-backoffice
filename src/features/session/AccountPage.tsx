@@ -1,4 +1,3 @@
-import { ClockCountdown, IdentificationBadge, SignOut, Timer } from "@phosphor-icons/react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { m } from "motion/react"
 import { useEffect, useState } from "react"
@@ -11,11 +10,16 @@ import { useLocale } from "../../i18n/use_locale"
 import type { BffFailure } from "../../types/bff_failure.type"
 import { Button } from "../../ui/Button"
 import { Drawing } from "../../ui/drawing/Drawing"
+import { ClockCountdown } from "../../ui/icons/ClockCountdown"
+import { IdentificationBadge } from "../../ui/icons/IdentificationBadge"
+import { SignOut } from "../../ui/icons/SignOut"
+import { Timer } from "../../ui/icons/Timer"
 import { enter, stagger } from "../../ui/motion/motion_presets"
 import { Notice } from "../../ui/Notice"
 import { PageHeader } from "../../ui/PageHeader"
 import { useNow } from "../../ui/use_now"
 import { usePresence } from "../../ui/use_presence"
+import { SecurityPanel } from "../passkeys/SecurityPanel"
 import styles from "./AccountPage.module.css"
 import { useAccountText } from "./account_text"
 import { IdentityCard } from "./IdentityCard"
@@ -145,6 +149,7 @@ function AccountPage() {
           </div>
         </m.section>
       </m.div>
+      {account.data === undefined ? null : <SecurityPanel userId={account.data.userId} />}
     </>
   )
 }

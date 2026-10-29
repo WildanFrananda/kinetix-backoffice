@@ -4,7 +4,9 @@ declare const styles: {
   readonly "key": string;
   readonly "lead": string;
   readonly "manual": string;
+  readonly "or": string;
   readonly "panel": string;
+  readonly "passkey": string;
   readonly "qr": string;
   readonly "timer": string;
   readonly "title": string;

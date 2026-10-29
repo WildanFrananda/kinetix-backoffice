@@ -9,6 +9,8 @@ import { fakeBff } from "../support/fake_bff"
 
 let bff = fakeBff({})
 
+const noPasskeys = { "GET /bff/api/v1/auth/passkeys/1": () => Response.json({ passkeys: [] }) }
+
 afterEach(() => {
   expect(bff.unexpected).toEqual([])
   vi.unstubAllGlobals()
@@ -49,7 +51,7 @@ function show() {
 
 describe("the account page", () => {
   it("names the admin, counts down the session, and is accessible", async () => {
-    bff = fakeBff({ "GET /bff/api/v1/auth/me": me, "GET /bff/session": sessionUntil(11.5) })
+    bff = fakeBff({ "GET /bff/api/v1/auth/me": me, "GET /bff/session": sessionUntil(11.5), ...noPasskeys })
 
     const { container } = show()
 
@@ -65,6 +67,7 @@ describe("the account page", () => {
   it("stays signed in by using the session, then reads its new end", async () => {
     let uses = 0
     bff = fakeBff({
+      ...noPasskeys,
       "GET /bff/api/v1/auth/me": () => {
         uses += 1
 

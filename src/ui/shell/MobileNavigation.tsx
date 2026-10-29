@@ -1,6 +1,6 @@
-import { X } from "@phosphor-icons/react"
 import { Button, Dialog, Modal, ModalOverlay } from "react-aria-components"
 import { useText } from "../../i18n/use_text"
+import { X } from "../icons/X"
 import styles from "./MobileNavigation.module.css"
 import { Sidebar } from "./Sidebar"
 

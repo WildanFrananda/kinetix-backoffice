@@ -23,7 +23,7 @@ function SessionWatch() {
   const text = useText()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const href = useRouterState({ select: (state) => state.location.href })
+  const here = useRouterState({ select: (state) => state.resolvedLocation ?? state.location })
   const session = useQuery(sessionQuery())
   const { signOut, pending } = useSignOut()
   const [warning, setWarning] = useState(false)
@@ -33,10 +33,14 @@ function SessionWatch() {
   const expiresAt = session.data?.authenticated === true ? session.data.expiresAt.getTime() : null
 
   useEffect(() => {
-    if (session.data?.authenticated === false) {
-      void navigate({ to: "/sign-in", search: { redirect: href, notice: "session-ended" } })
+    if (session.data?.authenticated !== false || here.pathname === "/sign-in") {
+      return
     }
-  }, [session.data, navigate, href])
+
+    void leaveSession(queryClient, () =>
+      navigate({ to: "/sign-in", search: { redirect: here.href, notice: "session-ended" } })
+    )
+  }, [session.data, navigate, here, queryClient])
 
   useEffect(() => {
     if (expiresAt === null) {

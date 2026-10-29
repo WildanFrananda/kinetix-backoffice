@@ -1,6 +1,7 @@
-import { Check, X } from "@phosphor-icons/react"
 import type { DecisionKind } from "../../types/decision_kind.type"
 import { Button } from "../../ui/Button"
+import { Check } from "../../ui/icons/Check"
+import { X } from "../../ui/icons/X"
 import styles from "./Approvals.module.css"
 import { useApprovalsText } from "./approvals_text"
 

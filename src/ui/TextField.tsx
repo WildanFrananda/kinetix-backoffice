@@ -6,18 +6,20 @@ function TextField({
   description,
   error,
   code = false,
+  mono = false,
   ...props
 }: Omit<TextFieldProps, "children" | "isInvalid"> & {
   label: string
   description?: string
   error?: string | null
   code?: boolean
+  mono?: boolean
 }) {
   const invalid = error !== undefined && error !== null
   return (
     <AriaTextField {...props} isInvalid={invalid} className={styles.field}>
       <Label className={styles.label}>{label}</Label>
-      <Input className={code ? styles.code : styles.input} />
+      <Input className={code ? styles.code : mono ? styles.mono : styles.input} />
       {description === undefined ? null : (
         <Text slot="description" className={styles.description}>
           {description}

@@ -13,23 +13,42 @@ const cubeHalf: Vector3Tuple = [0.15, 0.15, 0.15]
 
 const timing = { arrive: 0.45, leave: 0.55, step: 0.045 }
 
-function slot(index: number, cells: number): [number, number] {
+function rowSlot(index: number, cells: number): [number, number] {
   const offset = (index - (cells - 1) / 2) * spacing
 
   return [offset / Math.SQRT2, -offset / Math.SQRT2]
 }
 
-function resting(index: number, cells: number): Vector3Tuple {
-  const [x, z] = slot(index, cells)
+function gridSlot(index: number, cells: number, columns: number): [number, number] {
+  const rows = Math.ceil(cells / columns)
+  const column = index % columns
+  const row = Math.floor(index / columns)
 
-  return [x, padHalf[1] * 2 + cubeHalf[1], z]
+  return [(column - (columns - 1) / 2) * spacing, (row - (rows - 1) / 2) * spacing]
 }
 
-function sessionFuseModel(options: { reducedMotion: boolean; cells: number; clock?: () => number }): SessionFuseModel {
+function sessionFuseModel(options: {
+  reducedMotion: boolean
+  cells: number
+  columns?: number
+  viewHeight?: number
+  clock?: () => number
+}): SessionFuseModel {
   const clock = options.clock ?? (() => performance.now() / 1000)
+  const columns = options.columns
   const cubes = new Map<number, MovingPiece>()
   const listeners = new Set<() => void>()
   let shown = 0
+
+  function slot(index: number, cells: number): [number, number] {
+    return columns === undefined ? rowSlot(index, cells) : gridSlot(index, cells, columns)
+  }
+
+  function resting(index: number, cells: number): Vector3Tuple {
+    const [x, z] = slot(index, cells)
+
+    return [x, padHalf[1] * 2 + cubeHalf[1], z]
+  }
 
   const pads: readonly DrawingBox[] = Array.from({ length: options.cells }, (_, index) => {
     const [x, z] = slot(index, options.cells)
@@ -41,7 +60,20 @@ function sessionFuseModel(options: { reducedMotion: boolean; cells: number; cloc
     return options.reducedMotion ? 0 : seconds
   }
 
-  function show(minutesLeft: number): void {
+  function arrivingFrom(
+    cube: MovingPiece | undefined,
+    target: Vector3Tuple,
+    now: number,
+    placed: boolean
+  ): Vector3Tuple {
+    if (placed) {
+      return target
+    }
+
+    return cube === undefined ? [target[0], target[1] + 1.1, target[2]] : positionOf(cube, now)
+  }
+
+  function show(minutesLeft: number, placed = false): void {
     const wanted = Math.max(0, Math.min(options.cells, Math.round(minutesLeft)))
     const now = clock()
 
@@ -50,13 +82,13 @@ function sessionFuseModel(options: { reducedMotion: boolean; cells: number; cloc
       const target = resting(index, options.cells)
 
       if (index < wanted && (cube === undefined || cube.leaving)) {
-        const from: Vector3Tuple = cube === undefined ? [target[0], target[1] + 1.1, target[2]] : positionOf(cube, now)
-        const delay = Math.max(0, index - shown) * timing.step
+        const from = arrivingFrom(cube, target, now, placed)
+        const delay = placed ? 0 : Math.max(0, index - shown) * timing.step
         cubes.set(index, {
           from,
           to: target,
           start: now + scaled(delay),
-          duration: scaled(timing.arrive),
+          duration: placed ? 0 : scaled(timing.arrive),
           lift: 0,
           accent: false,
           leaving: false
@@ -119,7 +151,7 @@ function sessionFuseModel(options: { reducedMotion: boolean; cells: number; cloc
   }
 
   return {
-    camera: { position: [6, 4.6, 6], target: [0, 0.15, 0], viewHeight: 2.6 },
+    camera: { position: [6, 4.6, 6], target: [0, 0.15, 0], viewHeight: options.viewHeight ?? 2.6 },
     floorHalf: 3,
     frame,
     subscribe,

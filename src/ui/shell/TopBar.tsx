@@ -1,6 +1,7 @@
-import { List, MagnifyingGlass } from "@phosphor-icons/react"
 import { Button } from "react-aria-components"
 import { useText } from "../../i18n/use_text"
+import { List } from "../icons/List"
+import { MagnifyingGlass } from "../icons/MagnifyingGlass"
 import { LocaleToggle } from "./LocaleToggle"
 import { ThemeToggle } from "./ThemeToggle"
 import styles from "./TopBar.module.css"

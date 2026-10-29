@@ -114,6 +114,8 @@
   "signIn.eyebrow": "Akses staf",
   "signIn.figureNumber": "Gbr. 1",
   "signIn.figureCaption": "Paket di rak, terurai lalu dirakit",
+  "signIn.endedFigureNumber": "Gbr. 2",
+  "signIn.endedFigureCaption": "Menit-menit sesi, habis",
   "overview.returns.title": "Retur yang perlu perhatian",
   "overview.returns.caption": "Retur terbaru, yang terbaru di atas",
   "overview.returns.loading": "Membaca retur…",
@@ -121,8 +123,17 @@
   "overview.returns.more": "Yang tampil {shown} terbaru; angka di atas menghitung semuanya.",
   "nav.sellers": "Pengajuan penjual",
   "nav.couriers": "Pengajuan kurir",
+  "nav.categories": "Kategori",
+  "nav.stock": "Stok",
   "copy.label": "Salin {label}",
   "copy.done": "Tersalin",
   "overview.approvals.reviewSellers": "Tinjau penjual",
-  "overview.approvals.reviewCouriers": "Tinjau kurir"
+  "overview.approvals.reviewCouriers": "Tinjau kurir",
+  "challenge.passkey.use": "Pakai passkey",
+  "challenge.passkey.waiting": "Menunggu passkey…",
+  "challenge.passkey.or": "Atau masukkan kode dari aplikasi authenticator.",
+  "challenge.passkey.declined": "Passkey tidak dipakai. Coba lagi, atau masukkan kode.",
+  "challenge.passkey.refused": "Passkey itu tidak diterima. Coba lagi, atau masukkan kode.",
+  "challenge.passkey.unsupported": "Akun ini punya passkey, tapi browser ini tidak bisa memakainya di sini. Masukkan kode saja.",
+  "challenge.passkey.unusable": "Browser ini tidak bisa memakai passkey di alamat ini. Masukkan kode saja."
 }

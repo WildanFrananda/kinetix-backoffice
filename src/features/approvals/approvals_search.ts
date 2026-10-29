@@ -6,6 +6,4 @@ const approvalsSearch = v.object({
   selected: v.fallback(v.optional(v.pipe(v.number(), v.integer(), v.minValue(1))), undefined)
 })
 
-const inPlace = { replace: true, resetScroll: false } as const
-
-export { approvalsSearch, inPlace }
+export { approvalsSearch }

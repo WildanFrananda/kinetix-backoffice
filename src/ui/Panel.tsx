@@ -1,8 +1,9 @@
-import { ArrowClockwise, type Icon } from "@phosphor-icons/react"
+import type { Icon } from "@phosphor-icons/react"
 import type { ReactNode } from "react"
 import { Button } from "react-aria-components"
 import { formatText } from "../i18n/format_text"
 import { useText } from "../i18n/use_text"
+import { ArrowClockwise } from "./icons/ArrowClockwise"
 import styles from "./Panel.module.css"
 import { RelativeTime } from "./RelativeTime"
 

@@ -16,6 +16,8 @@ import { Route as Signed_inAccountRouteImport } from './routes/_signed_in/accoun
 import { Route as Signed_inApprovalsIndexRouteImport } from './routes/_signed_in/approvals.index'
 import { Route as Signed_inApprovalsCouriersRouteImport } from './routes/_signed_in/approvals.couriers'
 import { Route as Signed_inApprovalsSellersRouteImport } from './routes/_signed_in/approvals.sellers'
+import { Route as Signed_inCatalogCategoriesRouteImport } from './routes/_signed_in/catalog.categories'
+import { Route as Signed_inWarehouseStockRouteImport } from './routes/_signed_in/warehouse.stock'
 
 const Signed_inRoute = Signed_inRouteImport.update({
   id: '/_signed_in',
@@ -53,6 +55,17 @@ const Signed_inApprovalsSellersRoute =
     path: '/approvals/sellers',
     getParentRoute: () => Signed_inRoute,
   } as any)
+const Signed_inCatalogCategoriesRoute =
+  Signed_inCatalogCategoriesRouteImport.update({
+    id: '/catalog/categories',
+    path: '/catalog/categories',
+    getParentRoute: () => Signed_inRoute,
+  } as any)
+const Signed_inWarehouseStockRoute = Signed_inWarehouseStockRouteImport.update({
+  id: '/warehouse/stock',
+  path: '/warehouse/stock',
+  getParentRoute: () => Signed_inRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof Signed_inIndexRoute
@@ -60,6 +73,8 @@ export interface FileRoutesByFullPath {
   '/account': typeof Signed_inAccountRoute
   '/approvals/couriers': typeof Signed_inApprovalsCouriersRoute
   '/approvals/sellers': typeof Signed_inApprovalsSellersRoute
+  '/catalog/categories': typeof Signed_inCatalogCategoriesRoute
+  '/warehouse/stock': typeof Signed_inWarehouseStockRoute
   '/approvals/': typeof Signed_inApprovalsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -68,6 +83,8 @@ export interface FileRoutesByTo {
   '/': typeof Signed_inIndexRoute
   '/approvals/couriers': typeof Signed_inApprovalsCouriersRoute
   '/approvals/sellers': typeof Signed_inApprovalsSellersRoute
+  '/catalog/categories': typeof Signed_inCatalogCategoriesRoute
+  '/warehouse/stock': typeof Signed_inWarehouseStockRoute
   '/approvals': typeof Signed_inApprovalsIndexRoute
 }
 export interface FileRoutesById {
@@ -78,6 +95,8 @@ export interface FileRoutesById {
   '/_signed_in/': typeof Signed_inIndexRoute
   '/_signed_in/approvals/couriers': typeof Signed_inApprovalsCouriersRoute
   '/_signed_in/approvals/sellers': typeof Signed_inApprovalsSellersRoute
+  '/_signed_in/catalog/categories': typeof Signed_inCatalogCategoriesRoute
+  '/_signed_in/warehouse/stock': typeof Signed_inWarehouseStockRoute
   '/_signed_in/approvals/': typeof Signed_inApprovalsIndexRoute
 }
 export interface FileRouteTypes {
@@ -88,6 +107,8 @@ export interface FileRouteTypes {
     | '/account'
     | '/approvals/couriers'
     | '/approvals/sellers'
+    | '/catalog/categories'
+    | '/warehouse/stock'
     | '/approvals/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -96,6 +117,8 @@ export interface FileRouteTypes {
     | '/'
     | '/approvals/couriers'
     | '/approvals/sellers'
+    | '/catalog/categories'
+    | '/warehouse/stock'
     | '/approvals'
   id:
     | '__root__'
@@ -105,6 +128,8 @@ export interface FileRouteTypes {
     | '/_signed_in/'
     | '/_signed_in/approvals/couriers'
     | '/_signed_in/approvals/sellers'
+    | '/_signed_in/catalog/categories'
+    | '/_signed_in/warehouse/stock'
     | '/_signed_in/approvals/'
   fileRoutesById: FileRoutesById
 }
@@ -164,6 +189,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Signed_inApprovalsSellersRouteImport
       parentRoute: typeof Signed_inRoute
     }
+    '/_signed_in/catalog/categories': {
+      id: '/_signed_in/catalog/categories'
+      path: '/catalog/categories'
+      fullPath: '/catalog/categories'
+      preLoaderRoute: typeof Signed_inCatalogCategoriesRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
+    '/_signed_in/warehouse/stock': {
+      id: '/_signed_in/warehouse/stock'
+      path: '/warehouse/stock'
+      fullPath: '/warehouse/stock'
+      preLoaderRoute: typeof Signed_inWarehouseStockRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
   }
 }
 
@@ -172,6 +211,8 @@ interface Signed_inRouteChildren {
   Signed_inIndexRoute: typeof Signed_inIndexRoute
   Signed_inApprovalsCouriersRoute: typeof Signed_inApprovalsCouriersRoute
   Signed_inApprovalsSellersRoute: typeof Signed_inApprovalsSellersRoute
+  Signed_inCatalogCategoriesRoute: typeof Signed_inCatalogCategoriesRoute
+  Signed_inWarehouseStockRoute: typeof Signed_inWarehouseStockRoute
   Signed_inApprovalsIndexRoute: typeof Signed_inApprovalsIndexRoute
 }
 
@@ -180,6 +221,8 @@ const Signed_inRouteChildren: Signed_inRouteChildren = {
   Signed_inIndexRoute: Signed_inIndexRoute,
   Signed_inApprovalsCouriersRoute: Signed_inApprovalsCouriersRoute,
   Signed_inApprovalsSellersRoute: Signed_inApprovalsSellersRoute,
+  Signed_inCatalogCategoriesRoute: Signed_inCatalogCategoriesRoute,
+  Signed_inWarehouseStockRoute: Signed_inWarehouseStockRoute,
   Signed_inApprovalsIndexRoute: Signed_inApprovalsIndexRoute,
 }
 

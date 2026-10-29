@@ -1,8 +1,10 @@
-import { Desktop, Moon, Sun } from "@phosphor-icons/react"
 import { useSyncExternalStore } from "react"
 import { ToggleButton, ToggleButtonGroup } from "react-aria-components"
 import { useText } from "../../i18n/use_text"
 import type { ThemeChoice } from "../../types/theme_choice.type"
+import { Desktop } from "../icons/Desktop"
+import { Moon } from "../icons/Moon"
+import { Sun } from "../icons/Sun"
 import { chooseTheme, storedTheme, subscribeTheme } from "../theme_store"
 import styles from "./Toggles.module.css"
 

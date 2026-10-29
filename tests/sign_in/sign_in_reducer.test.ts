@@ -11,7 +11,7 @@ describe("signInReducer", () => {
       now: 1_000
     })
 
-    expect(step).toEqual({ name: "challenge", endsAt: 301_000 })
+    expect(step).toEqual({ name: "challenge", endsAt: 301_000, passkeys: false })
   })
 
   it("enrols for ten minutes after mfaEnrolmentRequired, the key still to come", () => {
@@ -24,10 +24,20 @@ describe("signInReducer", () => {
     expect(step).toEqual({ name: "enrolment", endsAt: 600_000, setup: null })
   })
 
+  it("remembers whether the account can answer with a passkey", () => {
+    const step = signInReducer(initialStep(null), {
+      type: "password-accepted",
+      outcome: { mfaRequired: true, passkeys: true },
+      now: 0
+    })
+
+    expect(step).toEqual({ name: "challenge", endsAt: 300_000, passkeys: true })
+  })
+
   it("takes a key only while enrolling", () => {
     const enrolling = { name: "enrolment" as const, endsAt: 1, setup: null }
     expect(signInReducer(enrolling, { type: "setup-received", setup })).toEqual({ ...enrolling, setup })
-    const challenge = { name: "challenge" as const, endsAt: 1 }
+    const challenge = { name: "challenge" as const, endsAt: 1, passkeys: false }
     expect(signInReducer(challenge, { type: "setup-received", setup })).toBe(challenge)
   })
 

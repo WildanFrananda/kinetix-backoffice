@@ -40,12 +40,14 @@ function Drawing({
   model,
   media,
   className,
-  fallback
+  fallback,
+  onDrawn
 }: {
   model: DrawingModel
   media: string
   className?: string
   fallback: ReactNode
+  onDrawn?: () => void
 }) {
   const frame = useRef<HTMLDivElement>(null)
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -137,6 +139,12 @@ function Drawing({
       handle?.dispose()
     }
   }, [model, media])
+
+  useEffect(() => {
+    if (state === "drawn") {
+      onDrawn?.()
+    }
+  }, [state, onDrawn])
 
   return (
     <div

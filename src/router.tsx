@@ -17,8 +17,8 @@ function getRouter() {
       return
     }
 
-    const location = router.state.location
-    if (leaving || location.pathname === "/sign-in") {
+    const location = router.state.resolvedLocation ?? router.state.location
+    if (leaving || location.pathname === "/sign-in" || router.state.location.pathname === "/sign-in") {
       return
     }
 

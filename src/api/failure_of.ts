@@ -16,6 +16,21 @@ function limitScope(headers: Headers): "address" | "route" {
   return headers.has("X-RateLimit-Limit-Minute") || headers.has("RateLimit-Limit") ? "address" : "route"
 }
 
+const ignoredNumbers: ReadonlySet<string> = new Set(["status", "statusCode"])
+
+function numbersIn(body: unknown): Readonly<Record<string, number>> {
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
+    return {}
+  }
+
+  return Object.fromEntries(
+    Object.entries(body).filter(
+      (entry): entry is [string, number] =>
+        typeof entry[1] === "number" && Number.isFinite(entry[1]) && !ignoredNumbers.has(entry[0])
+    )
+  )
+}
+
 function failureOf(status: number, headers: Headers, body: unknown): BffFailure {
   const error = readErrorBody(body)
 
@@ -33,7 +48,7 @@ function failureOf(status: number, headers: Headers, body: unknown): BffFailure 
   }
 
   if (error === null && body === undefined && (status === 401 || status === 403)) {
-    return { kind: "refused", status, code: null, message: "", requestId: null }
+    return { kind: "refused", status, code: null, message: "", field: null, numbers: {}, requestId: null }
   }
 
   if (error === null) {
@@ -56,7 +71,15 @@ function failureOf(status: number, headers: Headers, body: unknown): BffFailure 
     return { kind: "network-refused", requestId: error.requestId }
   }
 
-  return { kind: "refused", status, code: error.code, message: error.message, requestId: error.requestId }
+  return {
+    kind: "refused",
+    status,
+    code: error.code,
+    message: error.message,
+    field: error.field,
+    numbers: numbersIn(body),
+    requestId: error.requestId
+  }
 }
 
 export { failureOf }
