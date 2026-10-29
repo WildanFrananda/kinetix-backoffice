@@ -28,7 +28,15 @@ function SignInFlow({
       case "credentials":
         return <CredentialsStep notice={step.notice} dispatch={dispatch} />
       case "challenge":
-        return <ChallengeStep endsAt={step.endsAt} dispatch={dispatch} onSignedIn={onSignedIn} onRestart={restart} />
+        return (
+          <ChallengeStep
+            endsAt={step.endsAt}
+            passkeys={step.passkeys}
+            dispatch={dispatch}
+            onSignedIn={onSignedIn}
+            onRestart={restart}
+          />
+        )
       case "enrolment":
         return <EnrolmentStep endsAt={step.endsAt} setup={step.setup} dispatch={dispatch} onRestart={restart} />
     }

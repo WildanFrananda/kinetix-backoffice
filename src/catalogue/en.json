@@ -128,5 +128,12 @@
   "copy.label": "Copy {label}",
   "copy.done": "Copied",
   "overview.approvals.reviewSellers": "Review sellers",
-  "overview.approvals.reviewCouriers": "Review couriers"
+  "overview.approvals.reviewCouriers": "Review couriers",
+  "challenge.passkey.use": "Use a passkey",
+  "challenge.passkey.waiting": "Waiting for the passkey…",
+  "challenge.passkey.or": "Or enter the code from your authenticator app.",
+  "challenge.passkey.declined": "The passkey was not used. Try again, or enter the code.",
+  "challenge.passkey.refused": "That passkey was not accepted. Try again, or enter the code.",
+  "challenge.passkey.unsupported": "This account has a passkey, but this browser cannot use it here. Enter the code instead.",
+  "challenge.passkey.unusable": "This browser could not use a passkey at this address. Enter the code instead."
 }

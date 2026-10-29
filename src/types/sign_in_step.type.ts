@@ -9,6 +9,7 @@ type SignInStep =
   | {
       name: "challenge"
       endsAt: number
+      passkeys: boolean
     }
   | {
       name: "enrolment"

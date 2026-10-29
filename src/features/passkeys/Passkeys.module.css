@@ -1,0 +1,190 @@
+.panel {
+  display: grid;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 2px solid var(--kx-fg);
+}
+
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-family: var(--kx-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--kx-gray-3);
+}
+
+.factors {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem 2.5rem;
+}
+
+.factor {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.factorTitle {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.status {
+  justify-self: start;
+  margin: 0;
+  padding: 0.125rem 0 0.125rem 0.625rem;
+  border-left: 3px solid var(--kx-lane-b);
+  font-family: var(--kx-font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.note,
+.state {
+  margin: 0;
+  color: var(--kx-gray-2);
+  font-size: 0.9375rem;
+}
+
+.keys {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--kx-rule);
+  list-style: none;
+}
+
+.key {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--kx-rule);
+}
+
+.keyIcon {
+  grid-row: span 2;
+  color: var(--kx-accent);
+}
+
+.keyName {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.keyMeta {
+  grid-column: 2;
+  font-size: 0.8125rem;
+  color: var(--kx-gray-3);
+}
+
+.key > :last-child {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--bo-layer-overlay);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  padding: var(--bo-gutter);
+  background: color-mix(in srgb, var(--kx-bg) 80%, transparent);
+}
+
+.overlay[data-entering] {
+  animation: fade var(--bo-duration) var(--bo-ease-out);
+}
+
+.overlay[data-exiting] {
+  animation: fade var(--bo-duration-quick) var(--bo-ease-in) reverse;
+}
+
+.modal {
+  width: min(30rem, 100%);
+}
+
+.dialog {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  padding: 1.5rem;
+  border: 1px solid var(--kx-fg);
+  border-top-width: 3px;
+  border-radius: var(--kx-radius);
+  background: var(--kx-bg);
+  outline: none;
+}
+
+.dialog[data-kind="remove"] {
+  border-top-color: var(--kx-accent);
+}
+
+.modal[data-entering] .dialog {
+  animation: rise var(--bo-duration) var(--bo-ease-out);
+}
+
+.dialogTitle {
+  margin: 0;
+  font-size: 1.375rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.dialogBody {
+  margin: 0;
+  color: var(--kx-gray-1);
+}
+
+.form {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay[data-entering],
+  .overlay[data-exiting],
+  .modal[data-entering] .dialog {
+    animation: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .factors {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  }
+}

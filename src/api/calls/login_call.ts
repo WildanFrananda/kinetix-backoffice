@@ -3,7 +3,7 @@ import type { BffCall } from "../../types/bff_call.type"
 import type { LoginOutcome } from "../../types/login_outcome.type"
 
 const loginSchema = v.union([
-  v.strictObject({ mfaRequired: v.literal(true) }),
+  v.strictObject({ mfaRequired: v.literal(true), passkeys: v.optional(v.boolean()) }),
   v.strictObject({ mfaEnrolmentRequired: v.literal(true) })
 ])
 

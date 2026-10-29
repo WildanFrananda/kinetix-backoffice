@@ -19,6 +19,7 @@ import { Notice } from "../../ui/Notice"
 import { PageHeader } from "../../ui/PageHeader"
 import { useNow } from "../../ui/use_now"
 import { usePresence } from "../../ui/use_presence"
+import { SecurityPanel } from "../passkeys/SecurityPanel"
 import styles from "./AccountPage.module.css"
 import { useAccountText } from "./account_text"
 import { IdentityCard } from "./IdentityCard"
@@ -148,6 +149,7 @@ function AccountPage() {
           </div>
         </m.section>
       </m.div>
+      {account.data === undefined ? null : <SecurityPanel userId={account.data.userId} />}
     </>
   )
 }

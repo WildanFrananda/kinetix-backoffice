@@ -401,6 +401,35 @@ characters. Now:
   `viewHeight` and `show(n, placed)`; the account page's row is unchanged. Seen in Chrome over CDP with WebGL (light) and
   SVG (dark): full at 0.7 s, emptying at 1.4–2.6 s, empty and still at 4.5 s.
 
+## Passkeys (2026-10-29, not released)
+
+The user asked to sign in without opening a phone. Plan and rulings: infra `docs/PASSKEYS.md`. A passkey replaces the
+code step after the password; the authenticator code stays always on (the WireGuard face is an IP address, where WebAuthn
+cannot work at all, and Tor Browser ships WebAuthn off), so the account page shows it as on with no way to switch it off.
+
+- **Sign-in**: the login answer's `passkeys` (the edge sends it to the backoffice only) puts "Use a passkey" above the
+  code when the browser has `PublicKeyCredential`; without WebAuthn the page says the code is the way. The ceremony is
+  `@simplewebauthn/browser` 14.0.0, imported on first use so it never reaches the initial load: options from
+  `/bff/2fa/passkey/options`, the browser's answer to `/bff/2fa/passkey/verify`. A declined prompt or identity's
+  `PASSKEY_REFUSED` leaves the code step open; the edge's pending-ended refusals end it as the code's do.
+- **The login answer is parsed strictly** (`login_call.ts`), and `passkeys` is optional there. A backoffice built before
+  this refuses the key, so this one must be in production before the edge starts sending it (PASSKEYS.md, "Order").
+- **Security on the account page** (`src/features/passkeys/`): the code (on), the passkeys (name, added, last used,
+  synced or this device only), add (a name and the password, then the device's prompt) and remove (the password; Cancel
+  focused). Options and answers are validated with Valibot against the library's JSON types (`exactOptional`, because
+  `exactOptionalPropertyTypes` is on).
+- **Not in the contract test yet**: the six calls (`edge.passkeyOptions`, `edge.verifyPasskey`, `identity.listPasskeys`,
+  `identity.passkeyRegistrationOptions`, `identity.registerPasskey`, `identity.removePasskey`) join
+  `tests/contract/backoffice_calls.ts` once the REST reference documents them, after identity and the edge are released.
+- **Refusals when adding**: a wrong password, `PASSKEY_LIMIT`, `TWO_FACTOR_REQUIRED`, `PASSKEY_EXISTS` (also caught
+  earlier as the browser's `InvalidStateError`, because `excludeCredentials` lists the account's own),
+  `PASSKEY_INVALID` and `PASSKEY_CHALLENGE_INVALID` each have their own words; every attempt asks for fresh options.
+- **Tests**: `tests/passkeys/` with the library mocked at the module boundary (the device's ceremony cannot run in jsdom).
+- **Seen against the lab** (2026-10-29, Chrome over CDP, `WebAuthn.addVirtualAuthenticator` ctap2/internal with user
+  verification, `--ignore-certificate-errors` and `--host-resolver-rules` for `backoffice.localhost`): add, sign out,
+  sign in with the passkey, the code beside it, remove, and no passkey offered afterwards. React Aria moves the focus
+  to Cancel in the remove dialog after the entering animation, about 0.9 s later, not at once. Not seen: Tor Browser.
+
 ## Files shared with kinetix-docs
 
 `shared.lock.json` lists the files copied from `kinetix-docs`: the design tokens (`src/styles/kx-tokens.css`), the
