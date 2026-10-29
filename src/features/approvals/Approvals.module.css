@@ -140,29 +140,67 @@
 }
 
 .figure {
-  display: none;
+  display: grid;
   margin: 0;
 }
 
 .drawing {
+  display: none;
   aspect-ratio: 21 / 8;
   border-bottom: 1px solid var(--kx-rule);
 }
 
 .legend {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+}
+
+.waiting {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
   margin: 0;
-  padding-top: 0.625rem;
-  text-align: center;
 }
 
-.legend[data-columns="2"] {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding-inline: 18%;
+.waiting dd {
+  margin: 0;
+  font-family: var(--kx-font-mono);
+  font-size: 1.75rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--kx-accent);
 }
 
-.legend dt {
+.tally {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.tally th,
+.tally td {
+  padding: 0.375rem 0 0.375rem 0.75rem;
+  border-top: 1px solid var(--kx-rule);
+  text-align: end;
+  vertical-align: baseline;
+}
+
+.tally td {
+  font-family: var(--kx-font-mono);
+  font-size: 1.125rem;
+}
+
+.tally caption {
+  padding-bottom: 0.375rem;
+  text-align: start;
+}
+
+.waiting dt,
+.tally caption,
+.tally thead th,
+.tally tbody th {
   font-family: var(--kx-font-mono);
   font-size: 0.6875rem;
   font-weight: 600;
@@ -171,15 +209,25 @@
   color: var(--kx-gray-3);
 }
 
-.legend dd {
-  margin: 0.125rem 0 0;
-  font-family: var(--kx-font-mono);
-  font-size: 1.25rem;
-  font-variant-numeric: tabular-nums;
+.tally thead th,
+.tally thead td {
+  padding-top: 0;
+  border-top: 2px solid var(--kx-fg);
+  vertical-align: bottom;
 }
 
-.legend dd[data-tone="attention"] {
-  color: var(--kx-accent);
+.tally tbody th {
+  padding-left: 0;
+  text-align: start;
+}
+
+.tallySince {
+  display: block;
+  margin-top: 0.125rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--kx-gray-3);
 }
 
 .workspace {
@@ -589,8 +637,24 @@
     align-items: end;
   }
 
-  .figure {
+  .drawing {
     display: block;
+  }
+
+  .legend {
+    grid-template-columns: minmax(6rem, 1fr) minmax(0, 3fr);
+    gap: 1.5rem;
+  }
+
+  .waiting {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-right: 1.5rem;
+    border-right: 1px solid var(--kx-rule);
+  }
+
+  .waiting dd {
+    font-size: 2.25rem;
   }
 
   .workspace {

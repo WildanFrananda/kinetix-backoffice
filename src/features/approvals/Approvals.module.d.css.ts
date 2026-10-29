@@ -52,6 +52,9 @@ declare const styles: {
   readonly "sectionTitle": string;
   readonly "status": string;
   readonly "statuses": string;
+  readonly "tally": string;
+  readonly "tallySince": string;
+  readonly "waiting": string;
   readonly "workspace": string;
 };
 export = styles;

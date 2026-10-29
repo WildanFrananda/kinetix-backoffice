@@ -4,10 +4,25 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { approvalsSearch, inPlace } from "../../src/features/approvals/approvals_search"
 import { CourierApprovalsPage } from "../../src/features/approvals/CourierApprovalsPage"
+import { periodStarts } from "../../src/features/approvals/period_starts"
 import { SellerApprovalsPage } from "../../src/features/approvals/SellerApprovalsPage"
 import { AppProviders, testQueryClient } from "../support/app_providers"
 import { axeViolations } from "../support/axe"
 import { fakeBff } from "../support/fake_bff"
+
+vi.mock("../../src/api/governor", async () => {
+  const { createRequestGovernor } = await import("../../src/api/request_governor")
+
+  return {
+    requestsPerMinute: 80,
+    governor: createRequestGovernor({
+      limit: Number.MAX_SAFE_INTEGER,
+      windowMs: 60_000,
+      now: Date.now,
+      channelName: null
+    })
+  }
+})
 
 let bff = fakeBff({})
 
@@ -29,7 +44,8 @@ function seller(applicationId: number, userId: number, storeName: string) {
     city: "Jakarta Pusat",
     postalCode: "10330",
     status: "pending",
-    verifiedAt: null
+    verifiedAt: null,
+    rejectedAt: null
   }
 }
 
@@ -42,7 +58,8 @@ function courier(applicationId: number, userId: number, email: string) {
     driverId: 100 + applicationId,
     status: "pending",
     filedAt: "2026-10-26T07:42:10.226Z",
-    approvedAt: null
+    approvedAt: null,
+    rejectedAt: null
   }
 }
 
@@ -52,8 +69,27 @@ const sellers = [
   seller(14, 59, "Roti Lapis")
 ]
 
+const tallies: string[] = []
+
+function tallyAnswer(request: Request): Response {
+  const since = new URL(request.url).searchParams.get("since") ?? ""
+  const starts = periodStarts(new Date())
+  tallies.push(since)
+
+  if (since === starts.day.toISOString()) {
+    return Response.json({ since, approved: 3, rejected: 1 })
+  }
+
+  if (since === starts.week.toISOString()) {
+    return Response.json({ since, approved: 9, rejected: 2 })
+  }
+
+  return Response.json({ since, approved: 31, rejected: 6 })
+}
+
 const queueCounts = {
-  "GET /bff/api/v1/couriers/applications": () => Response.json({ applications: [], nextAfterId: null })
+  "GET /bff/api/v1/couriers/applications": () => Response.json({ applications: [], nextAfterId: null }),
+  "GET /bff/api/v1/sellers/applications/tally": tallyAnswer
 }
 
 function profile(fullName: string) {
@@ -110,6 +146,12 @@ function show(path: string) {
   )
 
   return { router, ...view }
+}
+
+function cells(table: HTMLElement, row: string): string[] {
+  return within(within(table).getByRole("row", { name: new RegExp(`^${row}`) }))
+    .getAllByRole("cell")
+    .map((cell) => cell.textContent ?? "")
 }
 
 function asked(route: string): number {
@@ -276,6 +318,34 @@ describe("seller applications", () => {
     expect(asked("POST /bff/api/v1/sellers/57/reject")).toBe(1)
   })
 
+  it("counts the decisions of today, this week and this month from identity, and adds a new one at once", async () => {
+    tallies.length = 0
+    bff = fakeBff({
+      ...queueCounts,
+      "GET /bff/api/v1/sellers/applications": () => Response.json({ applications: sellers, nextAfterId: null }),
+      "GET /bff/api/v1/users/57/profile": profile("Siti Rahmawati"),
+      "GET /bff/api/v1/users/58/profile": profile("Budi Santoso"),
+      "POST /bff/api/v1/sellers/57/reject": () =>
+        Response.json({ id: 12, userId: 57, storeName: "Toko Kopi Kenari", status: "rejected", principalId: null })
+    })
+
+    const user = userEvent.setup()
+    show("/approvals/sellers")
+    const table = await screen.findByRole("table", { name: "Decided" })
+    await waitFor(() => expect(cells(table, "Approved")).toEqual(["3", "9", "31"]))
+    expect(cells(table, "Rejected")).toEqual(["1", "2", "6"])
+
+    const starts = periodStarts(new Date())
+    expect(tallies.sort()).toEqual([starts.day, starts.week, starts.month].map((start) => start.toISOString()).sort())
+
+    await user.keyboard("r")
+    await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Reject" }))
+
+    await waitFor(() => expect(cells(table, "Rejected")).toEqual(["2", "3", "7"]))
+    expect(cells(table, "Approved")).toEqual(["3", "9", "31"])
+    expect(asked("GET /bff/api/v1/sellers/applications/tally")).toBe(3)
+  })
+
   it("shows identity's refusal in its own words, changes nothing, and reads the list again", async () => {
     bff = fakeBff({
       ...queueCounts,
@@ -340,6 +410,7 @@ describe("seller applications", () => {
 
     const verified = bff.seen.find((request) => request.route === "GET /bff/api/v1/sellers/applications")
     expect(verified).toBeDefined()
+    expect(asked("GET /bff/api/v1/sellers/applications/tally")).toBe(0)
   })
 })
 
@@ -349,11 +420,12 @@ describe("courier applications", () => {
   const courierRoutes = {
     "GET /bff/api/v1/sellers/applications": () => Response.json({ applications: [], nextAfterId: null }),
     "GET /bff/api/v1/couriers/applications": () => Response.json({ applications: couriers, nextAfterId: null }),
+    "GET /bff/api/v1/couriers/applications/tally": tallyAnswer,
     "GET /bff/api/v1/users/63/profile": profile("Budi Kurniawan"),
     "GET /bff/api/v1/users/64/profile": profile("Sari Lestari")
   }
 
-  it("approves a courier by its principal and offers no rejection", async () => {
+  it("approves a courier by its principal", async () => {
     bff = fakeBff({
       ...courierRoutes,
       "POST /bff/api/v1/couriers/3c9e2a41-7b5d-4f08-9a1c-2d6e8f0b4c05/approve": () =>
@@ -370,12 +442,9 @@ describe("courier applications", () => {
     const { container } = show("/approvals/couriers")
     await screen.findByRole("heading", { level: 2, name: "kurir.budi@example.com" })
 
-    expect(screen.queryByRole("button", { name: /^Reject/ })).toBeNull()
     expect(screen.getByText("105")).toBeInTheDocument()
+    await screen.findByRole("table", { name: "Decided" })
     expect(await axeViolations(container)).toEqual([])
-
-    await user.keyboard("r")
-    expect(screen.queryByRole("alertdialog")).toBeNull()
 
     await user.keyboard("a")
     await user.keyboard("{Enter}")
@@ -383,6 +452,54 @@ describe("courier applications", () => {
     expect(
       await screen.findByText("kurir.budi@example.com is a courier now, and the fleet has activated the driver.")
     ).toBeInTheDocument()
+  })
+
+  it("asks before rejecting a courier, with Cancel ready, and rejects it by its principal", async () => {
+    bff = fakeBff({
+      ...courierRoutes,
+      "POST /bff/api/v1/couriers/3c9e2a41-7b5d-4f08-9a1c-2d6e8f0b4c05/reject": () =>
+        Response.json({
+          ...courier(5, 63, "kurir.budi@example.com"),
+          status: "rejected",
+          rejectedAt: "2026-10-29T03:20:11.204Z"
+        })
+    })
+
+    const user = userEvent.setup()
+    show("/approvals/couriers")
+    await screen.findByRole("heading", { level: 2, name: "kurir.budi@example.com" })
+
+    await user.keyboard("r")
+    const dialog = await screen.findByRole("alertdialog", { name: "Reject kurir.budi@example.com?" })
+    expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus()
+    expect(within(dialog).getByText(/the fleet is not asked/)).toBeInTheDocument()
+
+    await user.click(within(dialog).getByRole("button", { name: "Reject" }))
+
+    expect(await screen.findByText("The application of kurir.budi@example.com is rejected.")).toBeInTheDocument()
+    expect(await screen.findByRole("heading", { level: 2, name: "kurir.sari@example.com" })).toBeInTheDocument()
+    expect(asked("POST /bff/api/v1/couriers/3c9e2a41-7b5d-4f08-9a1c-2d6e8f0b4c05/reject")).toBe(1)
+  })
+
+  it("lists rejected couriers with when they were rejected and offers no decision", async () => {
+    bff = fakeBff({
+      ...courierRoutes,
+      "GET /bff/api/v1/couriers/applications": () =>
+        Response.json({
+          applications: [{ ...couriers[0], status: "rejected", rejectedAt: "2026-10-29T03:20:11.204Z" }],
+          nextAfterId: null
+        })
+    })
+
+    show("/approvals/couriers?status=rejected")
+    await screen.findByRole("heading", { level: 2, name: "kurir.budi@example.com" })
+
+    expect(screen.getByText(/The courier may register again from the courier app/)).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Approve" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Reject" })).toBeNull()
+
+    const listed = bff.seen.find((request) => request.route === "GET /bff/api/v1/couriers/applications")
+    expect(listed).toBeDefined()
   })
 
   it("explains a courier who is approved but whose driver the fleet was not told about", async () => {

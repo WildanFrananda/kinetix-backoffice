@@ -13,6 +13,7 @@ import { statusLabel, statusTone } from "./status_tone"
 
 function SellerDetail({ application, onAsk }: { application: SellerApplication; onAsk: (kind: DecisionKind) => void }) {
   const text = useApprovalsText()
+  const decidedAt = application.status === "rejected" ? application.rejectedAt : application.verifiedAt
 
   return (
     <article className={styles.detail} aria-labelledby="application-title">
@@ -61,7 +62,7 @@ function SellerDetail({ application, onAsk }: { application: SellerApplication; 
       ) : (
         <p className={styles.decided}>
           {application.status === "rejected" ? text["approvals.decided.rejected"] : text["approvals.decided.verified"]}{" "}
-          {application.verifiedAt === null ? null : <RelativeTime instant={application.verifiedAt} />}
+          {decidedAt === null ? null : <RelativeTime instant={decidedAt} />}
         </p>
       )}
     </article>

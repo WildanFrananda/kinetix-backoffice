@@ -5,8 +5,6 @@ import { formatText } from "../../i18n/format_text"
 import { useLocale } from "../../i18n/use_locale"
 import type { ApprovalsSearch } from "../../types/approvals_search.type"
 import type { CourierApplication } from "../../types/courier_application.type"
-import type { DecisionKind } from "../../types/decision_kind.type"
-import type { DecisionReport } from "../../types/decision_report.type"
 import { PageHeader } from "../../ui/PageHeader"
 import { relative } from "../../ui/RelativeTime"
 import { usePresence } from "../../ui/use_presence"
@@ -18,16 +16,17 @@ import { useApprovalsText } from "./approvals_text"
 import { CourierDetail } from "./CourierDetail"
 import { DecisionDialog } from "./DecisionDialog"
 import { DecisionNotice } from "./DecisionNotice"
-import { approveCourier } from "./decide"
+import { decideCourier } from "./decide"
 import { decisionFailure } from "./decision_failure"
 import { searchWith } from "./queue_selection"
 import { StatusFilter } from "./StatusFilter"
 import { TrayFigure } from "./TrayFigure"
 import { useApprovalQueue } from "./use_approval_queue"
+import { useDecisionTallies } from "./use_decision_tallies"
 
-const statuses = ["pending", "approved"] as const
+const statuses = ["pending", "approved", "rejected"] as const
 
-const outcomes = ["approved"] as const
+const outcomes = ["approved", "rejected"] as const
 
 function courierId(application: CourierApplication): number {
   return application.applicationId
@@ -35,10 +34,6 @@ function courierId(application: CourierApplication): number {
 
 function courierName(application: CourierApplication): string {
   return application.email
-}
-
-function decideCourier(_kind: DecisionKind, application: CourierApplication): Promise<DecisionReport> {
-  return approveCourier(application)
 }
 
 function CourierApprovalsPage({
@@ -58,6 +53,7 @@ function CourierApprovalsPage({
   const list = useQuery(query)
   const applications = list.data?.applications
   const deciding = status === "pending"
+  const tallies = useDecisionTallies("couriers", { poll, enabled: deciding })
 
   const queue = useApprovalQueue({
     queue: "couriers",
@@ -68,9 +64,11 @@ function CourierApprovalsPage({
     wanted: search.selected,
     onSelect: (id) => onSearch(searchWith(search, { selected: id })),
     outcomes,
-    decide: decideCourier
+    decide: decideCourier,
+    onDecided: tallies.count
   })
 
+  const asking = queue.asking
   const failure = queue.error instanceof BffError ? decisionFailure(queue.error.failure, text, "couriers") : null
   const waiting =
     applications === undefined
@@ -94,18 +92,8 @@ function CourierApprovalsPage({
             onChange={(next) => onSearch(searchWith({}, { status: next }))}
           />
         }
-        figure={
-          deciding ? (
-            <TrayFigure
-              model={queue.model}
-              waiting={waiting}
-              approved={queue.tally.approved}
-              rejected={0}
-              canReject={false}
-            />
-          ) : null
-        }
-        canReject={false}
+        figure={deciding ? <TrayFigure model={queue.model} waiting={waiting} periods={tallies.rows} /> : null}
+        canReject={deciding}
         listTitle={text[`approvals.list.${status}`]}
         list={
           <ApplicationList
@@ -148,11 +136,20 @@ function CourierApprovalsPage({
       />
       <DecisionDialog
         open={queue.open}
-        kind="approve"
-        title={formatText(text["approvals.confirm.approveCourier.title"], {
-          name: queue.asking?.application.email ?? ""
-        })}
-        body={text["approvals.confirm.approveCourier.body"]}
+        kind={asking?.kind ?? "approve"}
+        title={formatText(
+          text[
+            asking?.kind === "reject"
+              ? "approvals.confirm.rejectCourier.title"
+              : "approvals.confirm.approveCourier.title"
+          ],
+          { name: asking?.application.email ?? "" }
+        )}
+        body={
+          text[
+            asking?.kind === "reject" ? "approvals.confirm.rejectCourier.body" : "approvals.confirm.approveCourier.body"
+          ]
+        }
         pending={queue.pending}
         failure={failure}
         onConfirm={queue.confirm}

@@ -21,6 +21,7 @@ import { SellerDetail } from "./SellerDetail"
 import { StatusFilter } from "./StatusFilter"
 import { TrayFigure } from "./TrayFigure"
 import { useApprovalQueue } from "./use_approval_queue"
+import { useDecisionTallies } from "./use_decision_tallies"
 
 const statuses = ["pending", "verified", "rejected"] as const
 
@@ -50,6 +51,7 @@ function SellerApprovalsPage({
   const list = useQuery(query)
   const applications = list.data?.applications
   const deciding = status === "pending"
+  const tallies = useDecisionTallies("sellers", { poll, enabled: deciding })
 
   const queue = useApprovalQueue({
     queue: "sellers",
@@ -60,7 +62,8 @@ function SellerApprovalsPage({
     wanted: search.selected,
     onSelect: (id) => onSearch(searchWith(search, { selected: id })),
     outcomes,
-    decide: decideSeller
+    decide: decideSeller,
+    onDecided: tallies.count
   })
 
   const asking = queue.asking
@@ -87,17 +90,7 @@ function SellerApprovalsPage({
             onChange={(next) => onSearch(searchWith({}, { status: next }))}
           />
         }
-        figure={
-          deciding ? (
-            <TrayFigure
-              model={queue.model}
-              waiting={waiting}
-              approved={queue.tally.approved}
-              rejected={queue.tally.rejected}
-              canReject
-            />
-          ) : null
-        }
+        figure={deciding ? <TrayFigure model={queue.model} waiting={waiting} periods={tallies.rows} /> : null}
         canReject={deciding}
         listTitle={text[`approvals.list.${status}`]}
         list={
