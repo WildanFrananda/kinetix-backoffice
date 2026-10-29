@@ -160,6 +160,31 @@ describe("the security panel", () => {
     expect(await within(dialog).findByText("That password is not right.")).toBeInTheDocument()
   })
 
+  it("says the passkey belongs to another address when the browser refuses this one, and sends nothing", async () => {
+    bff = fakeBff({
+      "GET /bff/api/v1/auth/passkeys/7": () => Response.json({ passkeys: [] }),
+      "POST /bff/api/v1/auth/passkeys/7/options": () => Response.json({ challengeId: "ch-4", options: creation })
+    })
+
+    ceremony.startRegistration.mockRejectedValue(
+      Object.assign(new Error("The RP ID is invalid for this domain"), {
+        name: "SecurityError",
+        code: "ERROR_INVALID_RP_ID"
+      })
+    )
+
+    const user = userEvent.setup()
+    show()
+    await user.click(await screen.findByRole("button", { name: "Add a passkey" }))
+    const dialog = await screen.findByRole("dialog")
+    await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "MacBook")
+    await user.type(within(dialog).getByLabelText(/^Password/), "correct horse")
+    await user.click(within(dialog).getByRole("button", { name: "Add passkey" }))
+
+    expect(await within(dialog).findByText(/passkeys belong to the backoffice's own address/)).toBeInTheDocument()
+    expect(bff.seen.map((request) => request.route)).not.toContain("POST /bff/api/v1/auth/passkeys/7")
+  })
+
   it("says when identity cannot verify the device's answer, and when the request expired", async () => {
     const answers = [
       {

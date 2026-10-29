@@ -57,6 +57,7 @@
   "account.security.already": "Perangkat ini sudah menyimpan passkey untuk akun ini.",
   "account.security.declined": "Perangkat tidak membuat passkey. Tidak ada yang ditambahkan.",
   "account.security.failed": "Passkey tidak bisa dibuat. Tidak ada yang ditambahkan.",
+  "account.security.elsewhere": "Browser menolak: passkey terikat ke alamat backoffice sendiri, dan halaman ini dibuka di alamat lain, misalnya alamat VPN staf. Tambahkan passkey dari alamat onion di Tor Browser. Tidak ada yang ditambahkan.",
   "account.security.unverified": "Server tidak bisa memverifikasi jawaban perangkat. Tidak ada yang ditambahkan; coba lagi.",
   "account.security.expired": "Terlalu lama sehingga permintaannya kedaluwarsa. Tidak ada yang ditambahkan; coba lagi.",
   "account.security.addedNotice": "“{name}” ditambahkan. Masuk berikutnya bisa memakainya.",
