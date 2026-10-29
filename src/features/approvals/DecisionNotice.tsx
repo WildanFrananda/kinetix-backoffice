@@ -16,7 +16,7 @@ function DecisionNotice({ queue, report }: { queue: ApprovalQueue; report: Decis
 
   const done =
     report.outcome === "rejected"
-      ? text["approvals.done.rejectedSeller"]
+      ? text["approvals.done.rejected"]
       : text[queue === "sellers" ? "approvals.done.approvedSeller" : "approvals.done.approvedCourier"]
 
   return (

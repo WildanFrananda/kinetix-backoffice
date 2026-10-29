@@ -21,6 +21,7 @@ function CourierDetail({
 }) {
   const text = useApprovalsText()
   const locale = useLocale()
+  const decidedAt = application.status === "rejected" ? application.rejectedAt : application.approvedAt
 
   return (
     <article className={styles.detail} aria-labelledby="application-title">
@@ -59,11 +60,13 @@ function CourierDetail({
       </section>
       <ApplicantContact userId={application.userId} email={application.email} principalId={application.principalId} />
       {application.status === "pending" ? (
-        <DecisionActions canReject={false} onAsk={onAsk} />
+        <DecisionActions canReject onAsk={onAsk} />
       ) : (
         <p className={styles.decided}>
-          {text["approvals.decided.approved"]}{" "}
-          {application.approvedAt === null ? null : <RelativeTime instant={application.approvedAt} />}
+          {application.status === "rejected"
+            ? text["approvals.decided.rejectedCourier"]
+            : text["approvals.decided.approved"]}{" "}
+          {decidedAt === null ? null : <RelativeTime instant={decidedAt} />}
         </p>
       )}
     </article>

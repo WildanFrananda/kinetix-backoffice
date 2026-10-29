@@ -11,6 +11,7 @@ type SellerApplication = {
   postalCode: string
   status: "pending" | "verified" | "rejected"
   verifiedAt: Date | null
+  rejectedAt: Date | null
 }
 
 export type { SellerApplication }

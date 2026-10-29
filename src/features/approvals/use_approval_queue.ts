@@ -6,7 +6,6 @@ import type { ApprovalQueue } from "../../types/approval_queue.type"
 import type { DecisionKind } from "../../types/decision_kind.type"
 import type { DecisionOutcome } from "../../types/decision_outcome.type"
 import type { DecisionReport } from "../../types/decision_report.type"
-import type { DecisionTally } from "../../types/decision_tally.type"
 import type { PendingDecision } from "../../types/pending_decision.type"
 import { overviewKey } from "../overview/overview_queries"
 import { approvalsKey } from "./approvals_queries"
@@ -33,14 +32,14 @@ function useApprovalQueue<Application>(options: {
   onSelect: (id: number) => void
   outcomes: readonly DecisionOutcome[]
   decide: (kind: DecisionKind, application: Application) => Promise<DecisionReport>
+  onDecided: (outcome: DecisionOutcome) => void
 }) {
-  const { queue, listKey, applications, idOf, deciding, wanted, onSelect, outcomes, decide } = options
+  const { queue, listKey, applications, idOf, deciding, wanted, onSelect, outcomes, decide, onDecided } = options
   const queryClient = useQueryClient()
   const [model] = useState(() => trayModel({ reducedMotion: prefersReducedMotion(), outcomes }))
   const [asking, setAsking] = useState<PendingDecision<Application> | null>(null)
   const [open, setOpen] = useState(false)
   const [report, setReport] = useState<DecisionReport | null>(null)
-  const [tally, setTally] = useState<DecisionTally>({ approved: 0, rejected: 0 })
   const ids = useMemo(() => (applications ?? []).map(idOf), [applications, idOf])
   const selectedId = selectedIn(ids, wanted)
   const selected = applications?.find((application) => idOf(application) === selectedId) ?? null
@@ -49,7 +48,7 @@ function useApprovalQueue<Application>(options: {
     mutationFn: (request: PendingDecision<Application>) => decide(request.kind, request.application),
     onSuccess: (result) => {
       model.decide(String(result.id), result.outcome)
-      setTally((current) => ({ ...current, [result.outcome]: current[result.outcome] + 1 }))
+      onDecided(result.outcome)
       setReport(result)
       setOpen(false)
 
@@ -141,7 +140,6 @@ function useApprovalQueue<Application>(options: {
     pending: mutation.isPending,
     error: mutation.error,
     report,
-    tally,
     canReject
   }
 }

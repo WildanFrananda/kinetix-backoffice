@@ -198,9 +198,10 @@ stays the docs' (`BACKOFFICE.md` §5): no gradient, glow, pill or hover lift. Wh
 ## Approvals (F3, 2026-10-28)
 
 `/approvals/sellers` and `/approvals/couriers` (`src/features/approvals/`) follow `kinetix-docs`
-`apis/rest/backoffice/seller-applications` and `courier-applications`: the list, the applicant's profile, approve, and
-for sellers reject. The user asked for the sign-in's Three.js animation here too and a UI "yang indah"; the
-`ui-ux-pro-max` skill was consulted for the queue, the confirmation and the motion rules.
+`apis/rest/backoffice/seller-applications` and `courier-applications`: the list, the applicant's profile, approve,
+reject (couriers too since identity v1.6.0 and the REST reference's re-pin, 2026-10-29), and the counts of decisions.
+The user asked for the sign-in's Three.js animation here too and a UI "yang indah"; the `ui-ux-pro-max` skill was
+consulted for the queue, the confirmation and the motion rules.
 
 - **One queue page, two queues.** `useApprovalQueue` holds what both share: the selection (from the address, else the
   oldest), J/K/A/R (`use_queue_keys.ts`; ignored while typing or in a dialog), the confirmation, the mutation and what
@@ -220,29 +221,43 @@ for sellers reject. The user asked for the sign-in's Three.js animation here too
 - **The tray drawing** (`tray_model.ts`, `TrayFigure.tsx`): an in-tray holding one sheet per waiting application on the
   page (oldest on top, at most 20 drawn), the selected one pulled out in the accent, and one out-tray per outcome the
   queue has; a decision flies its sheet to its tray. It is real data and moves only when the data does: it settles
-  and stops drawing, there is no idle loop (the skill's rule against decorative infinite animation). Couriers get no
-  rejected tray: identity's courier reject is not released yet. The legend counts what was decided on this visit; the
-  user asked for today, this week and this month, kept across sign-outs, and ruled (2026-10-29) that the numbers come
-  from identity: `GET /api/v1/{sellers,couriers}/applications/tally?since=` is built in identity's working tree, and the
-  legend changes only once it is released and in the REST reference.
+  and stops drawing, there is no idle loop (the skill's rule against decorative infinite animation). Both queues have
+  an approved and a rejected tray. The drawing shows from 64rem; the legend under it shows at every width.
   `tests/approvals/tray_model.test.ts` refuses any two boxes passing through each other once settled, which is what the
   SVG painter's AABB ordering needs; it caught a selected sheet in a short queue lifted into the tray's front wall.
+- **Counts of decisions** (`use_decision_tallies.ts`, `period_starts.ts`). The user asked for today, this week and this
+  month instead of "on this visit", kept across sign-outs, and ruled (2026-10-29) that identity counts: one
+  `GET …/applications/tally?since=` per period, `since` being the period's start in the admin's own time zone (local
+  midnight, Monday, the first of the month; Monday for every locale, because `Intl.Locale` week info is missing in
+  Firefox and so in Tor Browser), sent as UTC with `Z`. Identity counts the applications as they stand now. A decision
+  adds one to every period's cached count at once (`setQueriesData`); the counts are read again only every five minutes
+  and on mount, never after each decision, because identity's courier controller allows 10 requests a minute per
+  address and approving several couriers in a minute would otherwise spend it. A decided list (approved, rejected)
+  asks for no count. Tally keys sit apart from the queue's (`["bff", "approval-tallies", …]`), so invalidating a queue
+  does not refetch them. Shown as a table: periods across, outcomes down, each period's first day under its name.
 - **Profiles** are read only after the selection rests 350 ms (`use_settled.ts`), so J held down does not spend the
   request budget; a 404 is "no profile saved", which the docs define as an answer about the profile, not the
   application.
-- **Feature catalogues.** The approvals' 77 strings are `src/catalogue/approvals/{en,id}.json`, merged over the shell's
+- **Feature catalogues.** The approvals' 84 strings are `src/catalogue/approvals/{en,id}.json`, merged over the shell's
   by `featureCatalogues` (`src/i18n/feature_catalogues.ts`) into `useApprovalsText`, and loaded with the route's chunk;
   the account page's are `src/catalogue/account/` the same way. In the shell's catalogue they cost about 4 KiB of the
   initial load in two languages; the budget stood at 199.1 KiB with them there. A later feature does the same.
-- **Budget**: 197.0 KiB of 200 on 2026-10-28 (from 192.6): two sidebar icons (Phosphor ships all six weights per icon),
+- **Budget**: 197.0 KiB of 200 on 2026-10-28 (from 192.6; 197.6 on 2026-10-29): two sidebar icons (Phosphor ships all six weights per icon),
   the routes' search validation and the shell's new keys. Headroom is about 3 KiB; each later screen adds a sidebar
   icon and a route, so F4 should expect to buy room (a single-weight icon set, or the sidebar's icons lazy).
 - **Contract.** Calls with path values are checked against the documented template (`{id}` matches one segment) and
   must fill every documented path field (`tests/contract/endpoints.test.ts`); a wrong path was planted and caught.
+- **The page tests and the request governor.** `governor.ts` is one module-level window of 80 requests a minute, so a
+  test file that renders many pages in a row runs out of it, and later tests wait for a slot until they time out (the
+  counts' three calls a page did that to the courier tests). `approvals_pages.test.tsx` replaces the module with a
+  governor without a limit; the budget itself is tested in `tests/api/`.
 - **Seen in Chrome over CDP** against a stateful stub edge, 1280 light and dark with WebGL, 1280 with
   `--disable-3d-apis` (SVG, 73 paths), 390 dark: list, J/J, approve with Enter, the flight, the notice, the reject
   dialog with Cancel focused, couriers, a decided list, the Overview; no overflow, no CSP violation or exception (the one
-  console line is the profile 404 the stub answers for an applicant without a profile). Not run: the lab E2E.
+  console line is the profile 404 the stub answers for an applicant without a profile). Not run: the lab E2E. Again on
+  2026-10-29 with the counts and the courier reject, same four setups: the counts move at once on a decision (a seller
+  approval 2/4/8 to 3/5/9, a courier rejection 0/0/1 to 1/1/2), the rejected sheet lands in the right-hand tray (SVG,
+  58 paths for couriers), a rejected courier reads "Rejected … ago", no overflow at 390.
 
 ## The account page (2026-10-29)
 
@@ -343,8 +358,4 @@ E2E_BASE_URL=http://<the lab's onion address> E2E_TOR_PROXY=socks5://kxlab-tor-c
 
 - ⌘K jumps between the screens that exist (the two queues included) and switches theme and language; lookups of an
   order, a job, an application or a SKU by id are not built yet.
-- Rejecting a courier: identity's `POST /api/v1/couriers/{principalId}/reject` is in production since identity v1.5.0
-  and gateway v1.8.0 (2026-10-29), but not yet in the REST reference, so no screen calls it.
-  When it is: a `rejectCourierCall`, `outcomes: ["approved", "rejected"]` on the courier page, and `rejected` in its
-  status filter.
 - A reason with a rejection: identity stores none, for sellers or couriers (infra `BACKOFFICE.md` §7.2).

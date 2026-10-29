@@ -3,7 +3,7 @@ import { instantSchema } from "./instant_schema"
 
 const sellerStatusSchema = v.picklist(["pending", "verified", "rejected"])
 
-const courierStatusSchema = v.picklist(["pending", "approved"])
+const courierStatusSchema = v.picklist(["pending", "approved", "rejected"])
 
 const sellerApplicationSchema = v.object({
   applicationId: v.number(),
@@ -17,7 +17,8 @@ const sellerApplicationSchema = v.object({
   city: v.string(),
   postalCode: v.string(),
   status: sellerStatusSchema,
-  verifiedAt: v.nullable(instantSchema)
+  verifiedAt: v.nullable(instantSchema),
+  rejectedAt: v.nullable(instantSchema)
 })
 
 const courierApplicationSchema = v.object({
@@ -28,7 +29,8 @@ const courierApplicationSchema = v.object({
   driverId: v.nullable(v.number()),
   status: courierStatusSchema,
   filedAt: instantSchema,
-  approvedAt: v.nullable(instantSchema)
+  approvedAt: v.nullable(instantSchema),
+  rejectedAt: v.nullable(instantSchema)
 })
 
 export { courierApplicationSchema, courierStatusSchema, sellerApplicationSchema, sellerStatusSchema }
