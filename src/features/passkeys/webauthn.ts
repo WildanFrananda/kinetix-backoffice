@@ -21,6 +21,14 @@ async function makePasskey(options: PublicKeyCredentialCreationOptionsJSON): Pro
   return startRegistration({ optionsJSON: options })
 }
 
+async function deviceUnlockOffered(): Promise<boolean | null> {
+  if (!supportsPasskeys() || typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable !== "function") {
+    return null
+  }
+
+  return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(() => null)
+}
+
 async function forgetPasskey(rpId: string, credentialId: string): Promise<void> {
   if (!supportsPasskeys() || typeof PublicKeyCredential.signalUnknownCredential !== "function") {
     return
@@ -72,6 +80,7 @@ function passkeyAlreadyHere(error: unknown): boolean {
 
 export {
   askForPasskey,
+  deviceUnlockOffered,
   forgetPasskey,
   keepOnlyPasskeys,
   makePasskey,

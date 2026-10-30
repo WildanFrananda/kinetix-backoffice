@@ -421,7 +421,13 @@ cannot work at all, and Tor Browser ships WebAuthn off), so the account page sho
   never stored. The browser is told what identity holds through WebAuthn's signal API where it exists (Chrome; not Tor
   Browser): `signalAllAcceptedCredentials` with the list's `credentialId`s each time the list is read (user handle =
   base64url of the principal id, as identity sets it; relying party = the page's host), and `signalUnknownCredential`
-  for a credential identity refused (a 4xx, never an outage, when it may have been stored). Options and answers are validated with Valibot against the library's JSON types (`exactOptional`, because
+  for a credential identity refused (a 4xx, never an outage, when it may have been stored).
+- **Tor Browser on a Mac offers a hardware security key only** (seen by the user in production, 2026-10-29: "Touch your
+  security key to continue with …", with `security.webauthn.enable_macos_passkeys` already `true`; a browser reaches
+  macOS's own passkeys only with a restricted Apple entitlement). Without a key that window waits for nothing, and the
+  user did not know what to press. Where `isUserVerifyingPlatformAuthenticatorAvailable()` answers `false`, Security
+  says only a hardware key (FIDO2) can be used and the add dialog says to plug it in, enter its PIN, touch it, or press
+  Cancel. Where the method is missing the usual words stay. Options and answers are validated with Valibot against the library's JSON types (`exactOptional`, because
   `exactOptionalPropertyTypes` is on).
 - **Not in the contract test yet**: the six calls (`edge.passkeyOptions`, `edge.verifyPasskey`, `identity.listPasskeys`,
   `identity.passkeyRegistrationOptions`, `identity.registerPasskey`, `identity.removePasskey`) join
@@ -509,6 +515,10 @@ E2E_BASE_URL=http://<the lab's onion address> E2E_TOR_PROXY=socks5://kxlab-tor-c
   address. `security.mixed_content.upgrade_display_content` is off because upstream Firefox (since 127) rewrites the
   page's own `http://…onion` images to `https` and they break; Tor Browser hit exactly this in 14.0a1 and exempts
   `.onion` from the upgrade (tor-browser#43012, merge request 1116). Without it the marks and the favicon fail.
+- **Since 2026-10-30 the onion face is HTTPS** from our own CA (infra `docs/BACKOFFICE-ONION-TLS.md`): `E2E_BASE_URL` is
+  `https://<the lab's onion address>`, and Firefox needs the lab CA (`pki/onion/ca.crt` in the infrastructure checkout) or
+  `E2E_IGNORE_HTTPS_ERRORS=1`; plain `http://` now answers 308. The Firefox preferences above were for the plaintext face;
+  this run has not been repeated since.
 - **Slower timeouts** through Tor: 180 s a test, 30 s an expectation.
 - **The test waits for "You are signed out." before leaving the page.** Sign-out lands on `/sign-in`, whose
   `beforeLoad` reads the session; through Tor that takes a second, and Firefox rejects a fetch still in flight when the
