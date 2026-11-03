@@ -261,6 +261,33 @@ consulted for the queue, the confirmation and the motion rules.
   approval 2/4/8 to 3/5/9, a courier rejection 0/0/1 to 1/1/2), the rejected sheet lands in the right-hand tray (SVG,
   58 paths for couriers), a rejected courier reads "Rejected … ago", no overflow at 390.
 
+## Credential checks (seal's predicates, 2026-11-03)
+
+`/seal/predicates` (`src/features/predicates/`) follows `kinetix-docs` `apis/rest/backoffice/predicates`: list,
+approve, withdraw. Seal's endpoints were in production (seal v1.7.0) and documented before the screen; `getPredicate`
+is not called, because the list holds every live predicate whole.
+
+- **What it shows.** The live checks (seal calls them predicates; the screen says "checks", the user-facing word on
+  the verifier page too), sorted by label, each with whether its registry rows are placed yet. A chosen one shows its
+  minimums, its freshness window, when it was approved and its two weekly rows (this week's and last week's), each
+  with the issue date it asks for and whether the registry holds it. The registry's generation sits above the list;
+  while none is active the page says new checks wait for one.
+- **Approving** sends exactly the documented body: `class` is always `courier` (the only class seal has), the label
+  trimmed, the three minimums and the window. The rating is typed as a rating (4.5 or 4,5, two decimals at most) and
+  sent in hundredths. The bounds are seal's (`predicate_rules.ts`: label 1 to 80 printable code points, deliveries up
+  to 1,000,000, rating up to 5, days active up to 36,525, window 1 to 365) and are checked before asking; seal still
+  decides, and `PREDICATE_EXISTS`, `TOO_MANY_PREDICATES`, `ADMIN_REQUIRED` and `INVALID_REQUEST` are explained with
+  seal's words quoted (`predicate_failure.ts`).
+- **Placement is not instant.** Seal writes a new check's rows to the registry on its next pass, within about ten
+  minutes; while any row is unplaced the list is read again every 30 s (`predicates_queries.ts`), and stops once all
+  are placed.
+- **Withdrawing** is confirmed in an `alertdialog` with Cancel focused, as deletes are elsewhere. A 404 reads the list
+  again: another admin withdrew it first.
+- **Keys**: J/K move, N new, W withdraw (`use_page_keys`). No drawing yet; the list and the rows table carry it.
+- **Tests**: `tests/predicates/` (the page with axe, the detail and its rows, approve with the rating in hundredths, a
+  refusal before asking, a duplicate quoted, withdraw with Cancel focused; the rules). Contract: three calls. Budget
+  194.4 KiB of 200 with the route and its sidebar entry. Not seen in Chrome over CDP yet, and not run against the lab.
+
 ## Icons (2026-10-29)
 
 Every Phosphor component carries all six weights as React elements in a `Map`, so each icon in the shell cost about
