@@ -1,5 +1,6 @@
 import { applicantProfileCall } from "../../src/api/calls/applicant_profile_call"
 import { approveCourierCall } from "../../src/api/calls/approve_courier_call"
+import { approvePredicateCall } from "../../src/api/calls/approve_predicate_call"
 import { binStockCall } from "../../src/api/calls/bin_stock_call"
 import { categoriesCall } from "../../src/api/calls/categories_call"
 import { courierApplicationsCall } from "../../src/api/calls/courier_applications_call"
@@ -13,6 +14,7 @@ import { logoutCall } from "../../src/api/calls/logout_call"
 import { meCall } from "../../src/api/calls/me_call"
 import { pendingCourierApplicationsCall } from "../../src/api/calls/pending_courier_applications_call"
 import { pendingSellerApplicationsCall } from "../../src/api/calls/pending_seller_applications_call"
+import { predicatesCall } from "../../src/api/calls/predicates_call"
 import { productCall } from "../../src/api/calls/product_call"
 import { rejectCourierCall } from "../../src/api/calls/reject_courier_call"
 import { rejectSellerCall } from "../../src/api/calls/reject_seller_call"
@@ -30,10 +32,18 @@ import { upsertBinCall } from "../../src/api/calls/upsert_bin_call"
 import { verifySellerCall } from "../../src/api/calls/verify_seller_call"
 import { verifyTwoFactorCall } from "../../src/api/calls/verify_two_factor_call"
 import { warehouseBinsCall } from "../../src/api/calls/warehouse_bins_call"
+import { withdrawPredicateCall } from "../../src/api/calls/withdraw_predicate_call"
 import type { BffCall } from "../../src/types/bff_call.type"
 
 const backofficeCalls: ReadonlyArray<BffCall<unknown>> = [
   sessionCall,
+  predicatesCall,
+  approvePredicateCall({
+    label: "Experienced courier",
+    minimums: { deliveries: 100, ratingHundredths: 450, daysActive: 90 },
+    freshnessDays: 30
+  }),
+  withdrawPredicateCall("4b5c6d7e-8f90-4a1b-9c2d-3e4f5a6b7c8d"),
   loginCall("admin@example.com", "correct horse"),
   verifyTwoFactorCall("123456"),
   setupTwoFactorCall,

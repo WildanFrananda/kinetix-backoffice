@@ -17,6 +17,7 @@ import { Route as Signed_inApprovalsIndexRouteImport } from './routes/_signed_in
 import { Route as Signed_inApprovalsCouriersRouteImport } from './routes/_signed_in/approvals.couriers'
 import { Route as Signed_inApprovalsSellersRouteImport } from './routes/_signed_in/approvals.sellers'
 import { Route as Signed_inCatalogCategoriesRouteImport } from './routes/_signed_in/catalog.categories'
+import { Route as Signed_inSealPredicatesRouteImport } from './routes/_signed_in/seal.predicates'
 import { Route as Signed_inWarehouseStockRouteImport } from './routes/_signed_in/warehouse.stock'
 
 const Signed_inRoute = Signed_inRouteImport.update({
@@ -61,6 +62,11 @@ const Signed_inCatalogCategoriesRoute =
     path: '/catalog/categories',
     getParentRoute: () => Signed_inRoute,
   } as any)
+const Signed_inSealPredicatesRoute = Signed_inSealPredicatesRouteImport.update({
+  id: '/seal/predicates',
+  path: '/seal/predicates',
+  getParentRoute: () => Signed_inRoute,
+} as any)
 const Signed_inWarehouseStockRoute = Signed_inWarehouseStockRouteImport.update({
   id: '/warehouse/stock',
   path: '/warehouse/stock',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/approvals/couriers': typeof Signed_inApprovalsCouriersRoute
   '/approvals/sellers': typeof Signed_inApprovalsSellersRoute
   '/catalog/categories': typeof Signed_inCatalogCategoriesRoute
+  '/seal/predicates': typeof Signed_inSealPredicatesRoute
   '/warehouse/stock': typeof Signed_inWarehouseStockRoute
   '/approvals/': typeof Signed_inApprovalsIndexRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/approvals/couriers': typeof Signed_inApprovalsCouriersRoute
   '/approvals/sellers': typeof Signed_inApprovalsSellersRoute
   '/catalog/categories': typeof Signed_inCatalogCategoriesRoute
+  '/seal/predicates': typeof Signed_inSealPredicatesRoute
   '/warehouse/stock': typeof Signed_inWarehouseStockRoute
   '/approvals': typeof Signed_inApprovalsIndexRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/_signed_in/approvals/couriers': typeof Signed_inApprovalsCouriersRoute
   '/_signed_in/approvals/sellers': typeof Signed_inApprovalsSellersRoute
   '/_signed_in/catalog/categories': typeof Signed_inCatalogCategoriesRoute
+  '/_signed_in/seal/predicates': typeof Signed_inSealPredicatesRoute
   '/_signed_in/warehouse/stock': typeof Signed_inWarehouseStockRoute
   '/_signed_in/approvals/': typeof Signed_inApprovalsIndexRoute
 }
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/approvals/couriers'
     | '/approvals/sellers'
     | '/catalog/categories'
+    | '/seal/predicates'
     | '/warehouse/stock'
     | '/approvals/'
   fileRoutesByTo: FileRoutesByTo
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/approvals/couriers'
     | '/approvals/sellers'
     | '/catalog/categories'
+    | '/seal/predicates'
     | '/warehouse/stock'
     | '/approvals'
   id:
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/_signed_in/approvals/couriers'
     | '/_signed_in/approvals/sellers'
     | '/_signed_in/catalog/categories'
+    | '/_signed_in/seal/predicates'
     | '/_signed_in/warehouse/stock'
     | '/_signed_in/approvals/'
   fileRoutesById: FileRoutesById
@@ -196,6 +208,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Signed_inCatalogCategoriesRouteImport
       parentRoute: typeof Signed_inRoute
     }
+    '/_signed_in/seal/predicates': {
+      id: '/_signed_in/seal/predicates'
+      path: '/seal/predicates'
+      fullPath: '/seal/predicates'
+      preLoaderRoute: typeof Signed_inSealPredicatesRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
     '/_signed_in/warehouse/stock': {
       id: '/_signed_in/warehouse/stock'
       path: '/warehouse/stock'
@@ -212,6 +231,7 @@ interface Signed_inRouteChildren {
   Signed_inApprovalsCouriersRoute: typeof Signed_inApprovalsCouriersRoute
   Signed_inApprovalsSellersRoute: typeof Signed_inApprovalsSellersRoute
   Signed_inCatalogCategoriesRoute: typeof Signed_inCatalogCategoriesRoute
+  Signed_inSealPredicatesRoute: typeof Signed_inSealPredicatesRoute
   Signed_inWarehouseStockRoute: typeof Signed_inWarehouseStockRoute
   Signed_inApprovalsIndexRoute: typeof Signed_inApprovalsIndexRoute
 }
@@ -222,6 +242,7 @@ const Signed_inRouteChildren: Signed_inRouteChildren = {
   Signed_inApprovalsCouriersRoute: Signed_inApprovalsCouriersRoute,
   Signed_inApprovalsSellersRoute: Signed_inApprovalsSellersRoute,
   Signed_inCatalogCategoriesRoute: Signed_inCatalogCategoriesRoute,
+  Signed_inSealPredicatesRoute: Signed_inSealPredicatesRoute,
   Signed_inWarehouseStockRoute: Signed_inWarehouseStockRoute,
   Signed_inApprovalsIndexRoute: Signed_inApprovalsIndexRoute,
 }

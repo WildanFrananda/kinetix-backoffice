@@ -261,6 +261,33 @@ consulted for the queue, the confirmation and the motion rules.
   approval 2/4/8 to 3/5/9, a courier rejection 0/0/1 to 1/1/2), the rejected sheet lands in the right-hand tray (SVG,
   58 paths for couriers), a rejected courier reads "Rejected … ago", no overflow at 390.
 
+## Credential checks (seal's predicates, 2026-11-03)
+
+`/seal/predicates` (`src/features/predicates/`) follows `kinetix-docs` `apis/rest/backoffice/predicates`: list,
+approve, withdraw. Seal's endpoints were in production (seal v1.7.0) and documented before the screen; `getPredicate`
+is not called, because the list holds every live predicate whole.
+
+- **What it shows.** The live checks (seal calls them predicates; the screen says "checks", the user-facing word on
+  the verifier page too), sorted by label, each with whether its registry rows are placed yet. A chosen one shows its
+  minimums, its freshness window, when it was approved and its two weekly rows (this week's and last week's), each
+  with the issue date it asks for and whether the registry holds it. The registry's generation sits above the list;
+  while none is active the page says new checks wait for one.
+- **Approving** sends exactly the documented body: `class` is always `courier` (the only class seal has), the label
+  trimmed, the three minimums and the window. The rating is typed as a rating (4.5 or 4,5, two decimals at most) and
+  sent in hundredths. The bounds are seal's (`predicate_rules.ts`: label 1 to 80 printable code points, deliveries up
+  to 1,000,000, rating up to 5, days active up to 36,525, window 1 to 365) and are checked before asking; seal still
+  decides, and `PREDICATE_EXISTS`, `TOO_MANY_PREDICATES`, `ADMIN_REQUIRED` and `INVALID_REQUEST` are explained with
+  seal's words quoted (`predicate_failure.ts`).
+- **Placement is not instant.** Seal writes a new check's rows to the registry on its next pass, within about ten
+  minutes; while any row is unplaced the list is read again every 30 s (`predicates_queries.ts`), and stops once all
+  are placed.
+- **Withdrawing** is confirmed in an `alertdialog` with Cancel focused, as deletes are elsewhere. A 404 reads the list
+  again: another admin withdrew it first.
+- **Keys**: J/K move, N new, W withdraw (`use_page_keys`). No drawing yet; the list and the rows table carry it.
+- **Tests**: `tests/predicates/` (the page with axe, the detail and its rows, approve with the rating in hundredths, a
+  refusal before asking, a duplicate quoted, withdraw with Cancel focused; the rules). Contract: three calls. Budget
+  194.4 KiB of 200 with the route and its sidebar entry. Not seen in Chrome over CDP yet, and not run against the lab.
+
 ## Icons (2026-10-29)
 
 Every Phosphor component carries all six weights as React elements in a `Map`, so each icon in the shell cost about
@@ -421,7 +448,13 @@ cannot work at all, and Tor Browser ships WebAuthn off), so the account page sho
   never stored. The browser is told what identity holds through WebAuthn's signal API where it exists (Chrome; not Tor
   Browser): `signalAllAcceptedCredentials` with the list's `credentialId`s each time the list is read (user handle =
   base64url of the principal id, as identity sets it; relying party = the page's host), and `signalUnknownCredential`
-  for a credential identity refused (a 4xx, never an outage, when it may have been stored). Options and answers are validated with Valibot against the library's JSON types (`exactOptional`, because
+  for a credential identity refused (a 4xx, never an outage, when it may have been stored).
+- **Tor Browser on a Mac offers a hardware security key only** (seen by the user in production, 2026-10-29: "Touch your
+  security key to continue with …", with `security.webauthn.enable_macos_passkeys` already `true`; a browser reaches
+  macOS's own passkeys only with a restricted Apple entitlement). Without a key that window waits for nothing, and the
+  user did not know what to press. Where `isUserVerifyingPlatformAuthenticatorAvailable()` answers `false`, Security
+  says only a hardware key (FIDO2) can be used and the add dialog says to plug it in, enter its PIN, touch it, or press
+  Cancel. Where the method is missing the usual words stay. Options and answers are validated with Valibot against the library's JSON types (`exactOptional`, because
   `exactOptionalPropertyTypes` is on).
 - **Not in the contract test yet**: the six calls (`edge.passkeyOptions`, `edge.verifyPasskey`, `identity.listPasskeys`,
   `identity.passkeyRegistrationOptions`, `identity.registerPasskey`, `identity.removePasskey`) join
@@ -509,6 +542,10 @@ E2E_BASE_URL=http://<the lab's onion address> E2E_TOR_PROXY=socks5://kxlab-tor-c
   address. `security.mixed_content.upgrade_display_content` is off because upstream Firefox (since 127) rewrites the
   page's own `http://…onion` images to `https` and they break; Tor Browser hit exactly this in 14.0a1 and exempts
   `.onion` from the upgrade (tor-browser#43012, merge request 1116). Without it the marks and the favicon fail.
+- **Since 2026-10-30 the onion face is HTTPS** from our own CA (infra `docs/BACKOFFICE-ONION-TLS.md`): `E2E_BASE_URL` is
+  `https://<the lab's onion address>`, and Firefox needs the lab CA (`pki/onion/ca.crt` in the infrastructure checkout) or
+  `E2E_IGNORE_HTTPS_ERRORS=1`; plain `http://` now answers 308. The Firefox preferences above were for the plaintext face;
+  this run has not been repeated since.
 - **Slower timeouts** through Tor: 180 s a test, 30 s an expectation.
 - **The test waits for "You are signed out." before leaving the page.** Sign-out lands on `/sign-in`, whose
   `beforeLoad` reads the session; through Tor that takes a second, and Firefox rejects a fetch still in flight when the

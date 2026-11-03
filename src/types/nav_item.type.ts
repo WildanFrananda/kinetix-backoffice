@@ -2,7 +2,14 @@ import type { Icon } from "@phosphor-icons/react"
 import type { Catalogue } from "./catalogue.type"
 
 type NavItem = {
-  to: "/" | "/approvals/sellers" | "/approvals/couriers" | "/catalog/categories" | "/warehouse/stock" | "/account"
+  to:
+    | "/"
+    | "/approvals/sellers"
+    | "/approvals/couriers"
+    | "/catalog/categories"
+    | "/warehouse/stock"
+    | "/seal/predicates"
+    | "/account"
   label: keyof Catalogue
   icon: Icon
   exact: boolean

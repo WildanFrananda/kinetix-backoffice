@@ -23,11 +23,13 @@ const nameLimit = 64
 function PasskeyDialog({
   userId,
   removing,
+  keyOnly,
   onClose,
   onDone
 }: {
   userId: number
   removing: Passkey | null
+  keyOnly: boolean
   onClose: () => void
   onDone: (report: SecurityReport) => void
 }) {
@@ -120,7 +122,9 @@ function PasskeyDialog({
               : formatText(text["account.security.removeTitle"], { name: removing.name })}
           </Heading>
           <p className={styles.dialogBody}>
-            {removing === null ? text["account.security.addBody"] : text["account.security.removeBody"]}
+            {removing === null
+              ? text[keyOnly ? "account.security.addBodyKey" : "account.security.addBody"]
+              : text["account.security.removeBody"]}
           </p>
           <form noValidate className={styles.form} onSubmit={submit}>
             {removing === null ? (

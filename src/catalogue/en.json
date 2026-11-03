@@ -125,6 +125,7 @@
   "nav.couriers": "Courier applications",
   "nav.categories": "Categories",
   "nav.stock": "Stock",
+  "nav.predicates": "Credential checks",
   "copy.label": "Copy {label}",
   "copy.done": "Copied",
   "overview.approvals.reviewSellers": "Review sellers",

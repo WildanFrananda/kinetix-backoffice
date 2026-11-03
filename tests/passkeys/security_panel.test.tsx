@@ -14,13 +14,26 @@ let bff = fakeBff({})
 
 class WebAuthnCredential {}
 
-const signals = vi.hoisted(() => ({ unknown: vi.fn(), accepted: vi.fn() }))
+const signals = vi.hoisted(() => ({ unknown: vi.fn(), accepted: vi.fn(), platform: vi.fn() }))
 
-class SignallingCredential {
-  static signalUnknownCredential = signals.unknown
+const SignallingCredential = Object.assign(
+  function SignallingCredential() {
+    return undefined
+  },
+  {
+    signalUnknownCredential: signals.unknown,
+    signalAllAcceptedCredentials: signals.accepted
+  }
+)
 
-  static signalAllAcceptedCredentials = signals.accepted
-}
+const KeyOnlyCredential = Object.assign(
+  function KeyOnlyCredential() {
+    return undefined
+  },
+  {
+    isUserVerifyingPlatformAuthenticatorAvailable: signals.platform
+  }
+)
 
 const macbook = {
   id: "5b7c1e2a-9d3f-4a8b-b6c4-2e1f0a9d8c7b",
@@ -266,6 +279,20 @@ describe("the security panel", () => {
 
     expect(await within(dialog).findByText(/the request expired/)).toBeInTheDocument()
     expect(bff.seen.filter((request) => request.route === "POST /bff/api/v1/auth/passkeys/7/options")).toHaveLength(2)
+  })
+
+  it("says a hardware security key is what this browser asks for when it offers no device lock, as Tor Browser on a Mac", async () => {
+    signals.platform.mockResolvedValue(false)
+    vi.stubGlobal("PublicKeyCredential", KeyOnlyCredential)
+    bff = fakeBff({ "GET /bff/api/v1/auth/passkeys/7": () => Response.json({ passkeys: [] }) })
+
+    const user = userEvent.setup()
+    show()
+
+    expect(await screen.findByText(/only a hardware security key \(USB or NFC, FIDO2\)/)).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Add a passkey" }))
+    const dialog = await screen.findByRole("dialog")
+    expect(within(dialog).getByText(/Without a key, press Cancel in that window/)).toBeInTheDocument()
   })
 
   it("cannot add a passkey where the browser has none, and says how to switch it on in Tor Browser", async () => {

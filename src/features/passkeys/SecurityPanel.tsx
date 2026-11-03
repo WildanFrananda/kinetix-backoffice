@@ -19,7 +19,7 @@ import { useAccountText } from "../session/account_text"
 import { PasskeyDialog } from "./PasskeyDialog"
 import styles from "./Passkeys.module.css"
 import { passkeysQuery } from "./passkey_queries"
-import { keepOnlyPasskeys, supportsPasskeys } from "./webauthn"
+import { deviceUnlockOffered, keepOnlyPasskeys, supportsPasskeys } from "./webauthn"
 
 function SecurityPanel({ userId, principalId }: { userId: number; principalId: string }) {
   const text = useAccountText()
@@ -28,6 +28,21 @@ function SecurityPanel({ userId, principalId }: { userId: number; principalId: s
   const [dialog, setDialog] = useState<{ removing: Passkey | null } | null>(null)
   const [report, setReport] = useState<SecurityReport | null>(null)
   const capable = supportsPasskeys()
+  const [keyOnly, setKeyOnly] = useState(false)
+
+  useEffect(() => {
+    let current = true
+
+    void deviceUnlockOffered().then((offered) => {
+      if (current) {
+        setKeyOnly(offered === false)
+      }
+    })
+
+    return () => {
+      current = false
+    }
+  }, [])
 
   useEffect(() => {
     if (passkeys.data !== undefined) {
@@ -127,7 +142,9 @@ function SecurityPanel({ userId, principalId }: { userId: number; principalId: s
           <h3 className={styles.factorTitle}>{text["account.security.passkeys"]}</h3>
           {list()}
           <p className={styles.note}>
-            {capable ? text["account.security.passkeysNote"] : text["account.security.unsupported"]}
+            {capable
+              ? text[keyOnly ? "account.security.keyOnly" : "account.security.passkeysNote"]
+              : text["account.security.unsupported"]}
           </p>
           <div>
             <Button
@@ -147,6 +164,7 @@ function SecurityPanel({ userId, principalId }: { userId: number; principalId: s
         <PasskeyDialog
           userId={userId}
           removing={dialog.removing}
+          keyOnly={keyOnly}
           onClose={() => setDialog(null)}
           onDone={(next) => {
             setDialog(null)
