@@ -4,6 +4,7 @@ import type { DrawingHandle } from "../../types/drawing_handle.type"
 import type { DrawingModel } from "../../types/drawing_model.type"
 import type { DrawingRenderer } from "../../types/drawing_renderer.type"
 import type { DrawingState } from "../../types/drawing_state.type"
+import { supportsWebgl2 } from "../webgl2"
 import styles from "./Drawing.module.css"
 
 function readColors(): DrawingColors {
@@ -14,17 +15,6 @@ function readColors(): DrawingColors {
     paper: style.getPropertyValue("--kx-bg").trim(),
     accent: style.getPropertyValue("--kx-accent").trim(),
     rule: style.getPropertyValue("--kx-rule-strong").trim()
-  }
-}
-
-function supportsWebgl2(): boolean {
-  try {
-    const probe = document.createElement("canvas").getContext("webgl2")
-    probe?.getExtension("WEBGL_lose_context")?.loseContext()
-
-    return probe !== null
-  } catch {
-    return false
   }
 }
 

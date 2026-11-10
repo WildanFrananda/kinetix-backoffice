@@ -11,6 +11,7 @@ const iconSet = {
   ClockCountdown: ["regular"],
   CloudSlash: ["regular"],
   Copy: ["regular"],
+  CornersOut: ["regular"],
   Desktop: ["regular"],
   Fingerprint: ["regular"],
   Hourglass: ["regular"],
@@ -20,9 +21,12 @@ const iconSet = {
   List: ["regular"],
   MagnifyingGlass: ["regular"],
   MapPin: ["regular"],
+  MapTrifold: ["regular"],
+  Minus: ["regular"],
   Moon: ["regular"],
   Moped: ["regular"],
   Package: ["regular", "thin"],
+  Path: ["regular"],
   Plus: ["regular"],
   PlusMinus: ["regular"],
   SealCheck: ["regular"],
@@ -42,7 +46,8 @@ const iconSet = {
   Warehouse: ["regular"],
   WarningDiamond: ["regular"],
   WifiSlash: ["regular"],
-  X: ["regular"]
+  X: ["regular"],
+  XCircle: ["regular"]
 } as const satisfies Readonly<Record<string, readonly IconWeight[]>>
 
 export { iconSet }

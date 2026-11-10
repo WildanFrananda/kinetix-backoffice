@@ -21,7 +21,8 @@ address, staff ranges, addresses, server names or anything from the infrastructu
 
 Bun 1.4.4 (toolchain image `oven/bun:1.4.4-slim`, pinned by digest), TanStack Start in SPA mode on Vite 8, React 19,
 TanStack Router, Query and Form, React Aria Components, Valibot, `qrcode.react`, Motion 14.2.0 (animation), Three.js
-0.186.1 (the technical drawings: WebGL 2 first, SVG where there is none, never in the initial load), Phosphor icons
+0.186.1 (the technical drawings: WebGL 2 first, SVG where there is none, never in the initial load), MapLibre GL JS
+6.16.0 with `pmtiles` 4.5.0 and `@protomaps/basemaps` 5.7.2 (F5's street map, same rule), Phosphor icons
 2.1.10 (drawn through generated single-weight components, see "Icons"), CSS Modules over the shared tokens
 with generated declarations (`typed-css-modules`), TypeScript 7, Biome with the estate's GritQL plugins, Vitest with
 jsdom and Testing Library (run under Bun: `bunx --bun vitest`), `axe-core` in the component tests, `@babel/parser` for
@@ -35,7 +36,8 @@ bin/dev bin/ci          # install, Biome, layout, CSS-module types + tsc, Vitest
 bin/dev bun scripts/check_layout.ts --fix   # insert the blank lines the house style asks for
 bin/dev bun run css-types   # regenerate src/**/*.module.d.css.ts after changing a CSS module
 bin/dev bun run icons   # regenerate src/ui/icons/ after changing scripts/icon_set.ts
-bin/dev bun run build   # dist/client (the app) and dist/nginx/csp.conf
+bin/dev bun run build   # dist/client (the app) and dist/nginx/csp.conf.template
+bin/dev bun scripts/sync_map_assets.ts   # re-copy the map's glyphs and sprites from their pinned commits
 bin/dev down            # remove the toolchain's volumes
 KINETIX_BFF_TARGET=https://localhost:8443 bun run dev   # on the laptop: hot reload against the lab's edge
 ```
@@ -75,8 +77,10 @@ the IDE shows "Cannot find module" until that is run again, and the toolchain ne
   that shows nothing before its session check.
 - **CSP without `unsafe-inline`.** Start's shell carries small inline scripts (router bootstrap and stream
   cleanup). `scripts/write_csp.ts` runs after `vite build`, hashes every inline script in `dist/client/index.html`
-  and writes `dist/nginx/csp.conf`. The hashes change with the build, and the image carries the matching file. The
-  build refuses inline styles. Trusted Types are required with no policy allowed. Checked in Chrome: no violation.
+  and writes `dist/nginx/csp.conf` (since F5 `csp.conf.template`, see "F5"). The hashes change with the build, and the
+  image carries the matching file. The build refuses inline styles. Trusted Types are required; until F5 no policy was
+  allowed, since F5 only the one named `default`, which admits the map's worker URL and nothing else. Checked in
+  Chrome: no violation.
 - **The theme is set before first paint** by `public/theme.js` (a stored choice, else `prefers-color-scheme`), a
   same-origin script, because the CSP refuses inline ones.
 - **nginx answers `/bff/` with a 404 of its own.** The gateway sends `/bff/` to the edge. If that route is ever
@@ -472,6 +476,193 @@ cannot work at all, and Tor Browser ships WebAuthn off), so the account page sho
   sign in with the passkey, the code beside it, remove, and no passkey offered afterwards. React Aria moves the focus
   to Cancel in the remove dialog after the entering animation, about 0.9 s later, not at once. Not seen: Tor Browser.
 
+## Fleet and dispatch, with a street map (F5, 2026-11-09)
+
+`/dispatch` and `/fleet` (`src/features/fleet/`) follow `kinetix-docs` `apis/rest/backoffice/fleet-and-dispatch`, the
+ten matching endpoints (`matching.listDrivers`, `getDriver`, `dispatchSummary`, `listDispatches`, `getDispatch`,
+`nearbyDrivers`, `assignDispatch`, `unassignDispatch`, `cancelDispatch`, `driverDispatches`), one call file each in
+`src/api/calls/`, schemas in `dispatch_schemas.ts`. Plan of record: infra `docs/BACKOFFICE-F5.md` (the user's rulings:
+a street map, MapLibre, a fallback without WebGL; Indonesia at z15 in production, Jabodetabek in the lab).
+
+- **The board** (`DispatchPage`, `JobView`): the counts (the Overview's own query and key, so moving between the two
+  costs nothing), the jobs newest first with a status filter and keyset paging (`status`, `before`, `job` in the
+  address, changed with `inPlace`), a filter over the page by job, order or air waybill number that offers "Open job N"
+  for a number not on the page. A job shows its facts, the pickup and drop-off on the map with the line between, the
+  straight-line distance (`src/map/distance.ts`, the haversine matching's `geo.ex` uses with the same mean radius,
+  6371.0088 km; its documented 0.581 and 1.051 km are the unit test), the timeline matching keeps (created, assigned,
+  delivered; picking up has no time in the API), the courier holding it (`getDriver`; a 404 is "not tracked now") with
+  their distance to the pickup, and a delivered job's proof of delivery.
+- **The fleet** (`FleetPage`, `CourierView`): every tracked courier on the map and in a list (online, busy, offline,
+  then by number), duty filter and a number filter; a courier's detail and the jobs they hold (`driverDispatches`), each
+  linked to the board. Clicking a courier's marker chooses them; a job's marker opens it on the board.
+- **Polling, as `BACKOFFICE.md` §6 set it**: counts and jobs every 15 s (4 a minute each), the fleet's positions every
+  10 s (6), through the governor at background priority and only while present. A job's own read, a courier, the
+  nearby list and a courier's jobs are read on demand, not polled. The detail follows the list without polling it: when
+  the list was read after the job and disagrees on status or courier, the job is read again once
+  (`listedAt > job.dataUpdatedAt`, never while a write is in flight). The first version compared without the clock and
+  looped forever in a test whose list and detail disagreed; a stale list would have done the same in production.
+- **Writes** (`use_job_actions.ts`, `job_cache.ts`, `JobDialog`): each confirmed in an `alertdialog`, Assign focused
+  when assigning (A, choose, Enter), "Keep it" focused for unassign and cancel. Assign and unassign are optimistic: the
+  job's status and courier change in the detail and in every cached page at once, and a refusal puts the snapshot back
+  and says why in words (`job_failure.ts`: `not_found`, `driver_not_found`, `already_assigned`, `driver_not_tracked`,
+  `driver_unavailable`, `not_assigned`, `invalid_transition`, `bound_to_order`, `invalid_nearby_query`); a 404 or 409 also
+  reads the job and the list again, because someone else moved first. After a 5xx, a 503 or a lost connection the job
+  is read again before anything else (the REST reference's step 7): if the change is there it is reported as made, if
+  not the page says nothing was done and offers "Try again", which reopens the confirmation; if the job cannot be read
+  the page asks to read it before trying again. Cancel is not optimistic, stays in its dialog on a refusal, and is
+  offered only for a job with no `order_number` that is waiting or assigned; a job booked by an order says it is
+  cancelled with the order. Unassign is offered only for `assigned`, matching's own rule.
+- **Assigning** (`AssignPanel`): the couriers matching finds near the pickup (`nearbyDrivers` with the pickup's
+  coordinates and a radius of 3, 10 or 25 km, sent explicitly), nearest first with matching's own `distance_km`; only
+  an `online` courier has an Assign button, the others say why. The panel says the admin's choice overrides the
+  capacity and position-age checks automatic dispatch makes. The nearby couriers are drawn on the map while it is open.
+- **Proof of delivery** (`ProofOfDelivery`): the photo is the presigned GET matching answers (`photo_url`, 15 minutes),
+  an `<img>` with `referrerpolicy="no-referrer"`; if it fails (expired, refused) the page says so and offers to read
+  the job again for a fresh link. The signature is a `data:image/png;base64,…` URI; rather than open `img-src` to
+  `data:`, `png_bytes.ts` checks the URI and the PNG signature, `createImageBitmap` decodes the bytes and a `<canvas
+  role="img">` draws them on the always-light tile colour (the strokes are dark). Nothing is read back from the canvas,
+  so Tor Browser's canvas protection does not interfere.
+- **Error bodies**: matching answers `{ "error": "bound_to_order" }` in lower snake case, and Phoenix's own failures
+  as `{ "errors": { "detail": … }, "traceId": … }`. `read_error_body.ts` reads both (a lower-case `error` with an
+  underscore is a code; a single lower-case word such as `unauthorized` stays a message). The contract test now also
+  reads every answer the docs list for any request to matching (`matchingAnswers`) as a known failure; the same check
+  over every service found three it cannot read (seal's 500, order's unknown-path 404, warehouse's HTML 400), left
+  outside F5 and reported.
+- **Keys**: J/K through the jobs or couriers, A assign, U unassign, X cancel, / the filter (`use_page_keys`; A/U/X reach
+  the detail through a `JobRequest` counter, like the stock page's `BinRequest`).
+
+### The map platform (`src/map/`, `src/ui/map/`)
+
+- **MapLibre GL JS 6.16.0, pinned exactly, not the latest.** 6.17.0 (2026-11-07) was three days old when F5 was
+  built; a dependency this large ships only once a release is at least two weeks old (the coordinator, 2026-11-10), so
+  6.16.0 (2026-10-25). Its worker and the API the painter uses are the same as 6.17.0's. The style-spec package that
+  validates the style in tests is pinned to 26.4.4, the version 6.16.0 asks for (`^26.4.4`) and older than it, and
+  `bun.lock` resolves both to that one copy. Version 6 has no separate CSP build any more: it is an ES module that
+  starts its worker as a module worker from a URL (`new Worker(url, { type: "module" })`, same-origin, no blob). The
+  worker is bundled by Vite as a hashed asset (`maplibre-gl-worker.mjs?worker&url`, `worker.format: "es"`) and
+  handed to `setWorkerUrl`; nginx serves it from `/assets/` as JavaScript, immutable. The painter (`street_map_painter.ts`, with MapLibre, `pmtiles`
+  and `@protomaps/basemaps`) is imported only when a map mounts: about 300 KiB gzip, plus the worker's 148 KiB, on the
+  F5 routes only. `check_bundle_budget.ts` refuses `maplibregl-canvas-container` and pmtiles' "Invalid PMTiles
+  protocol URL" in the initial load. No MapLibre control, popup or marker is used (the attribution control and popups
+  write HTML): zoom in, zoom out and "fit" are our own buttons, the markers are GeoJSON circle and symbol layers, the
+  attribution is our own caption ("© OpenStreetMap contributors · Protomaps · basemap of <build>"). MapLibre's 70 KB
+  stylesheet is not loaded either; `StreetMap.module.css` carries the dozen container rules the map needs.
+- **Trusted Types and the CSP.** `worker_policy.ts` creates the policy named `default` once, with only
+  `createScriptURL`, which returns the worker's absolute URL and throws a `TypeError` for anything else (another script,
+  a `blob:`); no `createHTML` or `createScript`, so every other sink stays refused. The CSP gained `worker-src 'self'`
+  and `trusted-types default` (not `'allow-duplicates'`); it still has no `blob:`, `data:`, `unsafe-inline` or
+  `unsafe-eval`. MapLibre decodes sprites with `createImageBitmap`, so `img-src` needs no `blob:` either. The worker's
+  `eval` and `import()` sit on `importScriptInWorkers`, which is never called.
+- **The style is built in code** (`basemap_style.ts`, `basemap_flavor.ts`): `@protomaps/basemaps`' `layers()` with a
+  flavour mixed from the tokens (`map_tokens.ts` reads `--kx-bg`, `--kx-fg`, grays, lanes and accent; `color_mix.ts`):
+  paper earth, roads as ink at rising shares by class, water and parks a faint mix of the two lanes, labels in the
+  grays with paper halos. No POI layer (the flavour has no `pois`), the accent never in the basemap, only on our own
+  places (the selected job's line, a chosen courier). Labels follow the admin's language (`lang` `en`/`id`). A theme
+  change (the `data-theme` attribute, watched by a `MutationObserver`) re-reads the tokens and `setStyle(…, { diff: true
+  })`; the sprite switches between the grayscale and black sets.
+- **Glyphs and sprites are ours**, served from `/map/<version>/`. `@protomaps/basemaps-assets` is not an npm package
+  (the brief said it was): it is the GitHub repository `protomaps/basemaps-assets`, so `scripts/sync_map_assets.ts`
+  copies the files from a pinned commit (and the sprites' MIT licence from `tangrams/icons`, pinned too) into
+  `public/map/<version>/`, where `version` is the first 12 hex of a SHA-256 over the files' hashes, and writes
+  `map_assets.lock.json`; `tests/map/map_assets.test.ts` refuses a changed file or a stray one. Only what labels need:
+  Noto Sans Regular, Medium and Italic, ranges 0-255, 256-511 and 8192-8447, plus Arabic (1536-1791) for Regular (the
+  second line of a name in another script); the grayscale and black sprites (arrow, town spot, capital, shields), since
+  without POIs the colour sets' icons are never drawn. 972 KB in the image; a browser fetches only the ranges in view.
+  Scanning every name in the Jakarta extract found 0-255 (1.18 M characters), 8192-8447 (402), Arabic (46), Cyrillic
+  (12), Latin Extended Additional (5) and a few Thai, Tamil, Malayalam and Myanmar characters: those rare ranges are
+  missing on purpose and MapLibre leaves the characters out. CJK is drawn locally by MapLibre
+  (`localIdeographFontFamily`). Because the directory name changes with the content, nginx serves `/map/` as
+  `public, max-age=31536000, immutable`: a repeat visit asks for nothing, which matters because `/map/` rides the app's
+  route and its 100 a minute shared by every onion visitor (the gateway's note, 2026-11-09).
+- **Tiles**: `pmtiles://<origin>/tiles/basemap.pmtiles/{z}/{x}/{y}` through the `pmtiles` protocol (range requests,
+  strong ETag, re-read on an ETag change). The source's `maxzoom` and `bounds` come from the manifest, so MapLibre asks
+  no TileJSON and the archive's header is read with the first tile. The view opens on the manifest's `bbox`;
+  `maxBounds` is that box plus a quarter of its span each side, widened when a place lies outside.
+- **The manifest** (`basemap_manifest.ts`) is infra's `kinetix basemap fetch` output, parsed strictly: `build`
+  (ISO date), `source` (URL), `bbox` (`[west, south, east, north]`, west < east and south < north), `maxzoom`, `bytes`,
+  `sha256` (64 hex), `written_at` (ISO instant). A 404 is "no basemap on this server": the grid drawing shows with that
+  sentence, not an error. Anything else that is not that shape (the app's page, another body, a 5xx) says the
+  description could not be read, with the status.
+- **Without WebGL 2** (`supportsWebgl2` in `src/ui/webgl2.ts`, shared with `Drawing`), or if MapLibre throws, the
+  map's place shows `PlaneMap`: the same places and lines on an equirectangular latitude/longitude grid at a round step,
+  labelled in the admin's language (`6.20° S` or `6,20° LS`), with a distance scale whose length is measured with the
+  haversine, and the sentence on how to get streets (`webgl.enable-webgl2` in Tor Browser's `about:config`, or Chrome).
+  The grid drawing asks for nothing: no manifest, no tiles, no glyphs. `plane_model.ts` is plain arithmetic and unit
+  tested (north up, east right, every point inside the margin, the scale's length is the distance it names). With no
+  position at all it says so instead of inventing a centre.
+- **`data-renderer`** on the map's `figure` says which drew (`webgl`, `svg`), as the drawings' frames do.
+
+### Serving it (`nginx/`, `Dockerfile`)
+
+- `location = /tiles/basemap.pmtiles` and `location = /tiles/basemap.json` alias the two files of the read-only volume
+  at `/srv/tiles`, with `Cache-Control: no-cache`, nginx's ETag and byte ranges, as `application/vnd.pmtiles` and
+  `application/json`; every other path under `/tiles/` is a JSON 404, and the `~ /\.` rule keeps refusing the fetch's
+  `.basemap.*.partial` files. A missing volume or file is a 404, never the SPA page (the gateway's conformance test
+  tells the two apart). `.pmtiles` is not in `gzip_types`: a range over a gzipped body breaks PMTiles.
+- `location /map/` serves the versioned assets immutable with `try_files $uri =404`, so a missing glyph range is a 404
+  rather than `index.html`.
+- **The CSP is rendered at container start.** `write_csp.ts` writes `dist/nginx/csp.conf.template` with
+  `img-src 'self' ${KINETIX_STORAGE_ORIGIN}` and refuses any other `$` in the policy. The image keeps nginx-unprivileged's
+  entrypoint (`ENTRYPOINT ["/docker-entrypoint.sh"]`, `CMD nginx`): `05-kinetix-storage-origin.sh` exits 1 unless the
+  variable is a bare origin (`http(s)://host[:port]`, nothing else, so it cannot add a directive or a quote), then
+  `20-envsubst-on-templates.sh` renders `/etc/nginx/templates/kinetix/csp.conf.template` into `/tmp/kinetix/csp.conf`
+  (`NGINX_ENVSUBST_OUTPUT_DIR=/tmp`, `NGINX_ENVSUBST_FILTER=KINETIX_STORAGE_ORIGIN`), the tmpfs the read-only root
+  already has. `headers.conf` includes that file; if it were missing nginx would refuse to start. Checked: without the
+  variable and with `http://… data:` the container exits 1.
+- **The lab's storage origin is plain http** (`http://localhost:9000`, the object store's public URL presigned links
+  name), on an https page. Chrome upgrades mixed passive content: the photo is asked for as `https://localhost:9000/…`,
+  which nothing serves, so in the lab the proof's photo shows "could not be shown" while production's https storage
+  host shows it. Nothing is loosened for the lab.
+
+### Tests and evidence
+
+- `tests/fleet/` (the board with axe; status and the older page; a job on the grid drawing with its distance; assign with
+  A, the busy courier not choosable, the optimistic status, the body `{ driver_id }`; a refusal rolled back in words and
+  the job read again; a 503 that was made; a 500 that was not, with "Try again"; unassign with "Keep it" focused;
+  `bound_to_order` in the dialog; cancel; the delivered job's photo and drawn signature; J/K; a job matching does not
+  have, opened from the filter; the detail read again once, not in a loop; the fleet with axe, a courier and their jobs,
+  the filters, a courier not tracked), `tests/map/` (distance, the plane model, the style valid by MapLibre's own
+  `validateStyleMin` in both themes and languages and coloured from the tokens, the manifest, the worker policy, the
+  asset lock, the street map's fallbacks: no WebGL, no basemap, an unreadable manifest, MapLibre failing, and the street
+  state with the painter mocked). 280 tests. Contract: thirteen calls more than before, 271 checks; a wrong path and an
+  extra body field were planted and caught.
+- `tests/approvals/approvals_pages.test.tsx`'s counts test pins its clock to a Wednesday: on a Monday (UTC, the
+  toolchain's zone) today and this week start together, the stub answered both with the week's numbers, and the test
+  failed on 2026-11-09.
+- **Budget**: 196.1 KiB of 200 (from 194.4): two sidebar icons and the two routes' search validation. The status
+  picklist is written in `fleet_search.ts` rather than imported from `dispatch_schemas.ts`, which would have pulled
+  every job and courier schema into the initial load.
+- **Seen in Chrome 157 over CDP** (with 6.17.0; once more with 6.16.0, below) against a stateful stub edge (Bun, in a
+  container) in front of the production image
+  itself (read-only root, tmpfs `/tmp`, the variable set, a 13 MB extract of central Jakarta at z15 cut from the
+  Protomaps build of 2026-11-08 with go-pmtiles 1.31.2, mounted at `/srv/tiles`), so nginx's ranges, ETags, types and
+  the rendered CSP were the real ones, with Trusted Types enforced:
+  - 1280 light, WebGL: the board, a job on the street map (3 range requests for tiles, 6 for `/map/`: two sprite files,
+    four glyph ranges, then nothing on a repeat), A, the busy courier without a button, a refused courier rolled back
+    to Waiting in words, a courier assigned, U with "Keep it" focused, X and cancel on an unbound job, the delivered
+    job's photo (480×320 from the storage origin) and signature drawn, the fleet with a courier and their job;
+  - 1280 dark, WebGL: the fleet and a job in charcoal, then the theme switched to light at run time (the style
+    re-coloured, the black sprite swapped for the grayscale one);
+  - 1280 with `--disable-3d-apis`: the grid drawing on the board and the fleet, the sentence, and not one request to
+    `/tiles/` or `/map/`;
+  - 390 dark: the job, the assign panel, the fleet and the board;
+  - every setup: `scrollWidth` equal to `innerWidth`, no `securitypolicyviolation`, no exception; the one console line
+    is the 409 the stub answers on purpose.
+- **Seen against the lab's basemap** (2026-11-10): `kinetix-backoffice` rebuilt and recreated from the infrastructure
+  checkout (`docker compose up -d --build --wait kinetix-backoffice`), with the `kinetix_basemap` volume (Jabodetabek
+  z15, build 2026-11-09, 140 MB) read-only at `/srv/tiles` and `KINETIX_STORAGE_ORIGIN` rendered into its CSP. Through
+  the gateway's TLS face: the manifest, a range of the archive (206, `application/vnd.pmtiles`, strong ETag,
+  `no-cache`), a sprite, and a 404 for any other path under `/tiles/`. In Chrome, the stub edge in front of that
+  container (sessions and matching are the stub's; the lab's own admin sign-in was not driven): the board's job and the
+  fleet on the real Jabodetabek streets, light and dark, caption "basemap of 2026-11-09", 31 tile ranges and 6 to 8
+  `/map/` files, no violation, no console problem. The lab gateway still answered `/tiles/` with the app route's
+  `X-RateLimit-Limit-Minute: 100` that day, not the map's own budget.
+- **Again with MapLibre 6.16.0** (2026-11-10), the lab container rebuilt with it and the stub in front: the job's map in
+  dark on the Jabodetabek basemap (the worker `maplibre-gl-worker-*.js` loaded as a module worker, 11 tile ranges), the
+  theme switched to light at run time (grayscale sprite fetched, style re-coloured), the fleet in WebGL, and with
+  `--disable-3d-apis` the grid drawing with its sentence and no request to `/tiles/` or `/map/`. No violation, no
+  console problem, no overflow. Map chunk 299.7 KB gzip, worker 147.6 KB.
+
 ## Files shared with kinetix-docs
 
 `shared.lock.json` lists the files copied from `kinetix-docs`: the design tokens (`src/styles/kx-tokens.css`), the
@@ -556,6 +747,8 @@ E2E_BASE_URL=http://<the lab's onion address> E2E_TOR_PROXY=socks5://kxlab-tor-c
 
 ## Not yet here
 
-- ⌘K jumps between the screens that exist (the two queues and the categories included) and switches theme and
-  language; lookups of an order, a job, an application or a SKU by id are not built yet.
+- ⌘K jumps between the screens that exist (the two queues, the categories, the board and the fleet included) and
+  switches theme and language; lookups of an order, a job, an application or a SKU by id are not built yet (the board's
+  filter opens a job by number).
+- Live updates over a WebSocket (X21) instead of polling the board and the fleet.
 - A reason with a rejection: identity stores none, for sellers or couriers (infra `BACKOFFICE.md` §7.2).

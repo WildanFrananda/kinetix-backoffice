@@ -1,17 +1,25 @@
 import { applicantProfileCall } from "../../src/api/calls/applicant_profile_call"
 import { approveCourierCall } from "../../src/api/calls/approve_courier_call"
 import { approvePredicateCall } from "../../src/api/calls/approve_predicate_call"
+import { assignDispatchCall } from "../../src/api/calls/assign_dispatch_call"
 import { binStockCall } from "../../src/api/calls/bin_stock_call"
+import { cancelDispatchCall } from "../../src/api/calls/cancel_dispatch_call"
 import { categoriesCall } from "../../src/api/calls/categories_call"
 import { courierApplicationsCall } from "../../src/api/calls/courier_applications_call"
 import { courierApplicationsTallyCall } from "../../src/api/calls/courier_applications_tally_call"
+import { courierCall } from "../../src/api/calls/courier_call"
+import { courierJobsCall } from "../../src/api/calls/courier_jobs_call"
 import { createCategoryCall } from "../../src/api/calls/create_category_call"
 import { deleteCategoryCall } from "../../src/api/calls/delete_category_call"
+import { dispatchJobCall } from "../../src/api/calls/dispatch_job_call"
+import { dispatchJobsCall } from "../../src/api/calls/dispatch_jobs_call"
 import { dispatchSummaryCall } from "../../src/api/calls/dispatch_summary_call"
 import { enableTwoFactorCall } from "../../src/api/calls/enable_two_factor_call"
+import { fleetCouriersCall } from "../../src/api/calls/fleet_couriers_call"
 import { loginCall } from "../../src/api/calls/login_call"
 import { logoutCall } from "../../src/api/calls/logout_call"
 import { meCall } from "../../src/api/calls/me_call"
+import { nearbyCouriersCall } from "../../src/api/calls/nearby_couriers_call"
 import { pendingCourierApplicationsCall } from "../../src/api/calls/pending_courier_applications_call"
 import { pendingSellerApplicationsCall } from "../../src/api/calls/pending_seller_applications_call"
 import { predicatesCall } from "../../src/api/calls/predicates_call"
@@ -27,6 +35,7 @@ import { setupTwoFactorCall } from "../../src/api/calls/setup_two_factor_call"
 import { stockAdjustmentsCall } from "../../src/api/calls/stock_adjustments_call"
 import { stockMovementCall } from "../../src/api/calls/stock_movement_call"
 import { stockReceiptsCall } from "../../src/api/calls/stock_receipts_call"
+import { unassignDispatchCall } from "../../src/api/calls/unassign_dispatch_call"
 import { updateCategoryCall } from "../../src/api/calls/update_category_call"
 import { upsertBinCall } from "../../src/api/calls/upsert_bin_call"
 import { verifySellerCall } from "../../src/api/calls/verify_seller_call"
@@ -51,6 +60,15 @@ const backofficeCalls: ReadonlyArray<BffCall<unknown>> = [
   logoutCall,
   meCall,
   dispatchSummaryCall,
+  fleetCouriersCall,
+  courierCall(17),
+  dispatchJobsCall({ status: "pending", before: 4812 }),
+  dispatchJobCall(4812),
+  nearbyCouriersCall({ near: { latitude: -6.1754, longitude: 106.8272 }, radiusKm: 3 }),
+  assignDispatchCall(4813, 17),
+  unassignDispatchCall(4813),
+  cancelDispatchCall(3920),
+  courierJobsCall(17),
   pendingSellerApplicationsCall,
   pendingCourierApplicationsCall,
   returnsNeedingAttentionCall,

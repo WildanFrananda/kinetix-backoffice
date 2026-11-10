@@ -1,5 +1,5 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
-import { contentSecurityPolicy } from "./content_security_policy.ts"
+import { contentSecurityPolicy, storageOriginPlaceholder } from "./content_security_policy.ts"
 import { inlineScriptHashes } from "./inline_script_hashes.ts"
 import { reactAriaStyleHashes } from "./react_aria_style_hashes.ts"
 
@@ -16,8 +16,12 @@ const styleHashes = reactAriaStyleHashes(
 
 const policy = contentSecurityPolicy(hashes, styleHashes)
 
+if (policy.replaceAll(storageOriginPlaceholder, "").includes("$")) {
+  throw new Error("the policy carries a $ that nginx's envsubst step would read as a variable")
+}
+
 mkdirSync("dist/nginx", { recursive: true })
-writeFileSync("dist/nginx/csp.conf", `add_header Content-Security-Policy "${policy}" always;\n`)
+writeFileSync("dist/nginx/csp.conf.template", `add_header Content-Security-Policy "${policy}" always;\n`)
 console.log(
-  `dist/nginx/csp.conf: ${hashes.length} inline script hash(es), ${styleHashes.length} React Aria style hash(es)`
+  `dist/nginx/csp.conf.template: ${hashes.length} inline script hash(es), ${styleHashes.length} React Aria style hash(es), img-src takes ${storageOriginPlaceholder} at container start`
 )

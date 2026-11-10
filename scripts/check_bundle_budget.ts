@@ -3,7 +3,12 @@ import type { BundleFile } from "./types/bundle_file.type"
 
 const budgetBytes = 200 * 1024
 
-const lazyOnly = ["isOrthographicCamera", "WebGLRenderer"]
+const lazyOnly = [
+  "isOrthographicCamera",
+  "WebGLRenderer",
+  "maplibregl-canvas-container",
+  "Invalid PMTiles protocol URL"
+]
 
 const client = "dist/client"
 
@@ -30,7 +35,7 @@ for (const file of sizes.sort((a, b) => b.bytes - a.bytes)) {
 console.log(`${(total / 1024).toFixed(1).padStart(7)} KiB  initial JavaScript, gzip (budget ${budgetBytes / 1024} KiB)`)
 
 if (leaked.length > 0) {
-  console.error(`the 3D engine reached the initial load: ${leaked.map((file) => file.path).join(", ")}`)
+  console.error(`the 3D engine or the map reached the initial load: ${leaked.map((file) => file.path).join(", ")}`)
   process.exit(1)
 }
 

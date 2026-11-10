@@ -4,6 +4,8 @@ import type { Catalogue } from "./catalogue.type"
 type NavItem = {
   to:
     | "/"
+    | "/dispatch"
+    | "/fleet"
     | "/approvals/sellers"
     | "/approvals/couriers"
     | "/catalog/categories"
