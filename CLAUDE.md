@@ -608,7 +608,11 @@ a street map, MapLibre, a fallback without WebGL; Indonesia at z15 in production
   `20-envsubst-on-templates.sh` renders `/etc/nginx/templates/kinetix/csp.conf.template` into `/tmp/kinetix/csp.conf`
   (`NGINX_ENVSUBST_OUTPUT_DIR=/tmp`, `NGINX_ENVSUBST_FILTER=KINETIX_STORAGE_ORIGIN`), the tmpfs the read-only root
   already has. `headers.conf` includes that file; if it were missing nginx would refuse to start. Checked: without the
-  variable and with `http://… data:` the container exits 1.
+  variable and with `http://… data:` the container exits 1. CI's `image` job runs the image with
+  `KINETIX_STORAGE_ORIGIN=https://storage.example.invalid`, requires `img-src 'self' https://storage.example.invalid;`
+  in the header and a 404 for `/tiles/` without the volume, and requires a refusal naming the variable for an empty
+  value, `http://… data:` and a value without a scheme. The first F5 push went red there (2026-11-10): the job still ran
+  the image without the variable, so the container exited and `/healthz` never answered.
 - **The lab's storage origin is plain http** (`http://localhost:9000`, the object store's public URL presigned links
   name), on an https page. Chrome upgrades mixed passive content: the photo is asked for as `https://localhost:9000/…`,
   which nothing serves, so in the lab the proof's photo shows "could not be shown" while production's https storage
