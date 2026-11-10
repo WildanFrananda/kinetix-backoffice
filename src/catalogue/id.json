@@ -138,5 +138,11 @@
   "challenge.passkey.declined": "Passkey tidak dipakai. Coba lagi, atau masukkan kode.",
   "challenge.passkey.refused": "Passkey itu tidak diterima. Coba lagi, atau masukkan kode.",
   "challenge.passkey.unsupported": "Akun ini punya passkey, tapi browser ini tidak bisa memakainya di sini. Masukkan kode saja.",
-  "challenge.passkey.unusable": "Browser ini tidak bisa memakai passkey di alamat ini. Masukkan kode saja."
+  "challenge.passkey.unusable": "Browser ini tidak bisa memakai passkey di alamat ini. Masukkan kode saja.",
+  "nav.orders": "Pesanan",
+  "nav.sagas": "Checkout macet",
+  "nav.returns": "Retur",
+  "palette.lookup": "Cari",
+  "palette.findOrder": "Cari pesanan {number}",
+  "palette.findReturn": "Cari retur {number}"
 }

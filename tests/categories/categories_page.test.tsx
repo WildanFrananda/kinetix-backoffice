@@ -283,6 +283,33 @@ describe("categories", () => {
     expect(names()).toEqual(["Elektronik", "Pakaian"])
   })
 
+  it("takes D, J and K from the page with focus on a category whose name starts with them", async () => {
+    const lettered = [
+      ...stored,
+      { id: 10, name: "Dapur", slug: "dapur" },
+      { id: 11, name: "Jam Tangan", slug: "jam-tangan" }
+    ]
+
+    bff = fakeBff({ "GET /bff/api/v1/categories": () => Response.json(lettered) })
+
+    const user = userEvent.setup()
+    const { router } = show("/catalog/categories")
+
+    await user.click(await screen.findByRole("option", { name: "Aksesori" }))
+    expect(screen.getByRole("option", { name: "Aksesori" })).toHaveFocus()
+    await waitFor(() => expect(router.state.location.search).toEqual({ selected: 3 }))
+
+    await user.keyboard("d")
+    expect(await screen.findByRole("alertdialog", { name: "Delete “Aksesori”?" })).toBeInTheDocument()
+    await user.keyboard("{Escape}")
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull())
+
+    await user.keyboard("j")
+    await waitFor(() => expect(router.state.location.search).toEqual({ selected: 10 }))
+    await user.keyboard("k")
+    await waitFor(() => expect(router.state.location.search).toEqual({ selected: 3 }))
+  })
+
   it("moves with J and K, opens a new form with N and asks before deleting with D", async () => {
     bff = fakeBff({ "GET /bff/api/v1/categories": () => Response.json(stored) })
 

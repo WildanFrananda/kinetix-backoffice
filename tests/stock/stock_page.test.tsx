@@ -322,6 +322,29 @@ describe("stock", () => {
     expect(router.state.location.search).toEqual({ bin: "C-01-2" })
   })
 
+  it("takes B from the page with focus on a bin whose code starts with it, and does not ask again on the next bin", async () => {
+    bff = fakeBff(floor())
+
+    const user = userEvent.setup()
+    const { router } = show("/warehouse/stock")
+
+    await user.click(await screen.findByRole("option", { name: "A-01-4" }))
+    expect(screen.getByRole("option", { name: "A-01-4" })).toHaveFocus()
+    await waitFor(() => expect(router.state.location.search).toEqual({ bin: "A-01-4" }))
+    await screen.findByRole("heading", { level: 2, name: "A-01-4" })
+
+    await user.keyboard("b")
+    expect(await screen.findByRole("dialog", { name: "Book goods into A-01-4" })).toBeInTheDocument()
+    await user.keyboard("{Escape}")
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+    expect(router.state.location.search).toEqual({ bin: "A-01-4" })
+
+    await user.keyboard("k")
+    await waitFor(() => expect(router.state.location.search).toEqual({ bin: "A-01-3" }))
+    await screen.findByRole("heading", { level: 2, name: "A-01-3" })
+    expect(screen.queryByRole("dialog")).toBeNull()
+  })
+
   it("moves through the bins with J and K, books in with B and makes a bin with N", async () => {
     bff = fakeBff(floor())
 

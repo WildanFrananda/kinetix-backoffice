@@ -2,9 +2,11 @@ import { applicantProfileCall } from "../../src/api/calls/applicant_profile_call
 import { approveCourierCall } from "../../src/api/calls/approve_courier_call"
 import { approvePredicateCall } from "../../src/api/calls/approve_predicate_call"
 import { assignDispatchCall } from "../../src/api/calls/assign_dispatch_call"
+import { attentionSagasCall } from "../../src/api/calls/attention_sagas_call"
 import { binStockCall } from "../../src/api/calls/bin_stock_call"
 import { cancelDispatchCall } from "../../src/api/calls/cancel_dispatch_call"
 import { categoriesCall } from "../../src/api/calls/categories_call"
+import { completeOrderCall } from "../../src/api/calls/complete_order_call"
 import { courierApplicationsCall } from "../../src/api/calls/courier_applications_call"
 import { courierApplicationsTallyCall } from "../../src/api/calls/courier_applications_tally_call"
 import { courierCall } from "../../src/api/calls/courier_call"
@@ -20,14 +22,17 @@ import { loginCall } from "../../src/api/calls/login_call"
 import { logoutCall } from "../../src/api/calls/logout_call"
 import { meCall } from "../../src/api/calls/me_call"
 import { nearbyCouriersCall } from "../../src/api/calls/nearby_couriers_call"
+import { orderCall } from "../../src/api/calls/order_call"
 import { pendingCourierApplicationsCall } from "../../src/api/calls/pending_courier_applications_call"
 import { pendingSellerApplicationsCall } from "../../src/api/calls/pending_seller_applications_call"
 import { predicatesCall } from "../../src/api/calls/predicates_call"
 import { productCall } from "../../src/api/calls/product_call"
 import { rejectCourierCall } from "../../src/api/calls/reject_courier_call"
+import { rejectReturnCall } from "../../src/api/calls/reject_return_call"
 import { rejectSellerCall } from "../../src/api/calls/reject_seller_call"
 import { returnsNeedingAttentionCall } from "../../src/api/calls/returns_needing_attention_call"
 import { sagasNeedingAttentionCall } from "../../src/api/calls/sagas_needing_attention_call"
+import { searchOrdersCall } from "../../src/api/calls/search_orders_call"
 import { sellerApplicationsCall } from "../../src/api/calls/seller_applications_call"
 import { sellerApplicationsTallyCall } from "../../src/api/calls/seller_applications_tally_call"
 import { sessionCall } from "../../src/api/calls/session_call"
@@ -73,6 +78,19 @@ const backofficeCalls: ReadonlyArray<BffCall<unknown>> = [
   pendingCourierApplicationsCall,
   returnsNeedingAttentionCall,
   sagasNeedingAttentionCall,
+  attentionSagasCall,
+  orderCall("0b6d3c2e-8f1a-4c5d-9e2b-1a2b3c4d5e6f"),
+  searchOrdersCall({
+    statuses: ["PAID", "DELIVERED"],
+    createdFrom: "2026-11-01T00:00:00+07:00",
+    createdTo: "2026-11-10T00:00:00+07:00",
+    merchant: "3aa957c8-b802-4d58-b9fc-f7b76ce60fa3",
+    customer: "9f1d2c3b-4a5e-4f60-8a7b-1c2d3e4f5a6b",
+    orderNumber: "ORD-20261105-0001",
+    before: "AQjfOI6fOUk0P4ocXm0rTp-KB1s8nR4vZNu9wRs"
+  }),
+  completeOrderCall("ORD-20261022-7F3A9C1B"),
+  rejectReturnCall("RMA-20261019-4B8D2E6A", "Foto dari pembeli menunjukkan segel kemasan masih utuh"),
   sellerApplicationsCall({ status: "pending", after: 40 }),
   verifySellerCall(57),
   rejectSellerCall(57),

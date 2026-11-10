@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { BffError } from "../../api/bff_error"
 import { formatText } from "../../i18n/format_text"
 import { useLocale } from "../../i18n/use_locale"
@@ -39,16 +39,23 @@ function BinDetail({
   const [after, setAfter] = useState<number | undefined>(undefined)
   const [moving, setMoving] = useState<{ row: StockRow | null } | null>(null)
   const [editing, setEditing] = useState(false)
+  const handled = useRef(request?.serial ?? 0)
   const shelf = useQuery(shelfQuery({ binCode: code }, after, poll))
   const firstRow = shelf.data?.rows[0]
   const place = bin ?? (firstRow === undefined ? null : { zone: firstRow.zone, shelfLevel: firstRow.shelfLevel })
 
   useEffect(() => {
-    if (request?.name === "receive") {
+    if (request === null || request.serial === handled.current) {
+      return
+    }
+
+    handled.current = request.serial
+
+    if (request.name === "receive") {
       setMoving({ row: null })
     }
 
-    if (request?.name === "edit") {
+    if (request.name === "edit") {
       setEditing(true)
     }
   }, [request])

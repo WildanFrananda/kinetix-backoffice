@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { FleetPage } from "../../src/features/fleet/FleetPage"
 import { dispatchSearch, fleetSearch } from "../../src/features/fleet/fleet_search"
+import { chooseLocale } from "../../src/i18n/locale_store"
 import { inPlace } from "../../src/ui/in_place"
 import { AppProviders, testQueryClient } from "../support/app_providers"
 import { axeViolations } from "../support/axe"
@@ -121,6 +122,29 @@ describe("the fleet", () => {
     const link = await within(detail).findByRole("link", { name: "Open job 4813 on the board" })
     expect(link).toHaveAttribute("href", "/dispatch?job=4813")
     expect(screen.getByRole("list", { name: "Legend" })).toHaveTextContent("Pickup")
+  })
+
+  it("takes K from the page with focus on a courier, in Indonesian where every courier is a Kurir", async () => {
+    chooseLocale("id")
+    bff = fakeBff(fleet())
+
+    try {
+      const user = userEvent.setup()
+      const { router } = show("/fleet")
+
+      await user.click(await screen.findByRole("option", { name: /Kurir 17/ }))
+      expect(screen.getByRole("option", { name: /Kurir 17/ })).toHaveFocus()
+      await waitFor(() => expect(router.state.location.search).toEqual({ courier: 17 }))
+
+      await user.keyboard("k")
+      await waitFor(() => expect(router.state.location.search).toEqual({ courier: 21 }))
+      await user.keyboard("j")
+      await waitFor(() => expect(router.state.location.search).toEqual({ courier: 17 }))
+    } finally {
+      window.localStorage.removeItem("kx-locale")
+      chooseLocale("en")
+      window.localStorage.removeItem("kx-locale")
+    }
   })
 
   it("filters by duty and by number, with / to the filter", async () => {

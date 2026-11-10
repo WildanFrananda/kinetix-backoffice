@@ -17,14 +17,6 @@ const codeText = {
   invalid_nearby_query: "dispatch.failure.invalidNearby"
 } as const
 
-function uncertain(failure: BffFailure): boolean {
-  if (failure.kind === "unavailable" || failure.kind === "unreachable") {
-    return true
-  }
-
-  return (failure.kind === "refused" || failure.kind === "unreadable") && failure.status >= 500
-}
-
 function jobFailure(failure: BffFailure, action: JobAction | null, text: FleetCatalogue): FailureExplanation {
   if (failure.kind !== "refused") {
     return { lead: failureText(failure, text), quote: null }
@@ -47,4 +39,4 @@ function jobFailure(failure: BffFailure, action: JobAction | null, text: FleetCa
   }
 }
 
-export { jobFailure, uncertain }
+export { jobFailure }

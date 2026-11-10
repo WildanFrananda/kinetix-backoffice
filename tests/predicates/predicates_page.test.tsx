@@ -1,5 +1,5 @@
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, RouterProvider } from "@tanstack/react-router"
-import { render, screen, within } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { PredicatesPage } from "../../src/features/predicates/PredicatesPage"
@@ -196,6 +196,29 @@ describe("credential checks", () => {
 
     expect(await screen.findByText("A live check already asks for exactly these minimums.")).toBeInTheDocument()
     expect(screen.getByText("a live predicate already has these minimums")).toBeInTheDocument()
+  })
+
+  it("takes J, K and W from the page with focus on a check whose label starts with them", async () => {
+    const daily = { ...experienced, id: "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d", label: "Kurir harian" }
+    const weekend = { ...experienced, id: "9f8e7d6c-5b4a-4c3d-8e2f-1a0b9c8d7e6f", label: "Weekend courier" }
+    bff = fakeBff({ "GET /bff/api/v1/seal/predicates": listed([weekend, daily]) })
+
+    const user = userEvent.setup()
+    const { router } = show("/seal/predicates")
+
+    await user.click(await screen.findByRole("option", { name: /Kurir harian/ }))
+    expect(screen.getByRole("option", { name: /Kurir harian/ })).toHaveFocus()
+    await waitFor(() => expect(router.state.location.search).toEqual({ selected: daily.id }))
+
+    await user.keyboard("w")
+    expect(await screen.findByRole("alertdialog", { name: "Withdraw “Kurir harian”?" })).toBeInTheDocument()
+    await user.keyboard("{Escape}")
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull())
+
+    await user.keyboard("k")
+    await waitFor(() => expect(router.state.location.search).toEqual({ selected: weekend.id }))
+    await user.keyboard("j")
+    await waitFor(() => expect(router.state.location.search).toEqual({ selected: daily.id }))
   })
 
   it("withdraws after a confirmation with Cancel focused", async () => {

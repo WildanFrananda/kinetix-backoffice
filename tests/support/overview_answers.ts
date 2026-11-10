@@ -21,17 +21,23 @@ function attentionReturns() {
     {
       returnNumber: "RMA-20261019-4B8D2E6A",
       orderNumber: "ORD-20261015-2C9E7A41",
+      merchantPrincipalId: "a3d5f7b9-2c4e-4a6b-8d0f-1e3a5c7b9d21",
       status: "OPEN",
       reason: "Kemasan bocor saat diterima",
       openedAt: "2026-10-19T08:42:11.204517Z",
+      goodsReceivedAt: null,
+      refundAmount: null,
       lastRefundError: null
     },
     {
       returnNumber: "RMA-20261020-9A1C3E5F",
       orderNumber: "ORD-20261016-6D2B8F03",
+      merchantPrincipalId: "a3d5f7b9-2c4e-4a6b-8d0f-1e3a5c7b9d21",
       status: "GOODS_RECEIVED",
       reason: "Barang tidak sesuai pesanan",
       openedAt: "2026-10-20T02:10:45.918362Z",
+      goodsReceivedAt: "2026-10-21T06:30:00Z",
+      refundAmount: 85000,
       lastRefundError: "payment held nothing to refund goods from"
     }
   ]
