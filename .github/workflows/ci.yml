@@ -102,7 +102,15 @@ jobs:
             exit 1
           fi
           [ "$(docker run --rm --entrypoint printenv kinetix-backoffice:ci KINETIX_SERVICE_VERSION)" = "${{ github.sha }}" ]
-          docker run -d --name app --read-only --tmpfs /tmp -p 127.0.0.1:8080:8080 kinetix-backoffice:ci
+          for origin in "" "http://storage.example.invalid data:" "storage.example.invalid"; do
+            if refusal="$(timeout 30 docker run --rm --read-only --tmpfs /tmp -e KINETIX_STORAGE_ORIGIN="$origin" kinetix-backoffice:ci 2>&1)"; then
+              echo "the image started with KINETIX_STORAGE_ORIGIN='$origin'"
+              exit 1
+            fi
+            echo "$refusal" | grep -q "KINETIX_STORAGE_ORIGIN"
+          done
+          docker run -d --name app --read-only --tmpfs /tmp -p 127.0.0.1:8080:8080 \
+            -e KINETIX_STORAGE_ORIGIN=https://storage.example.invalid kinetix-backoffice:ci
           for attempt in 1 2 3 4 5 6 7 8 9 10; do
             curl -sf http://127.0.0.1:8080/healthz >/dev/null && break
             sleep 1
@@ -110,12 +118,15 @@ jobs:
           curl -sf http://127.0.0.1:8080/healthz
           headers="$(curl -sfI http://127.0.0.1:8080/ | tr -d '\r')"
           echo "$headers" | grep -q "^Content-Security-Policy: default-src 'none'; script-src 'self' 'sha256-"
+          echo "$headers" | grep "^Content-Security-Policy:" | grep -q "img-src 'self' https://storage.example.invalid;"
           echo "$headers" | grep -q "^X-Content-Type-Options: nosniff"
           echo "$headers" | grep -q "^X-Frame-Options: DENY"
           echo "$headers" | grep -q "^Cache-Control: no-cache"
           [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/bff/session)" = 404 ]
           [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/assets/missing.js)" = 404 ]
           [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/a/deep/link)" = 200 ]
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/tiles/basemap.json)" = 404 ]
+          [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/tiles/anything)" = 404 ]
           docker rm -f app
 
   verify:

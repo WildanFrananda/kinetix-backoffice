@@ -20,7 +20,12 @@ const bareShape = v.object({
   error: v.string()
 })
 
-const code = /^[A-Z][A-Z0-9_]*$/
+const phoenixShape = v.object({
+  errors: v.object({ detail: v.string() }),
+  traceId: v.optional(v.string())
+})
+
+const code = /^(?:[A-Z][A-Z0-9_]*|[a-z][a-z0-9]*(?:_[a-z0-9]+)+)$/
 
 const problemShape = v.object({
   title: v.string(),
@@ -57,6 +62,11 @@ function readErrorBody(body: unknown): ErrorBody | null {
       field: null,
       requestId: problem.output.traceId ?? null
     }
+  }
+
+  const phoenix = v.safeParse(phoenixShape, body)
+  if (phoenix.success) {
+    return { code: null, message: phoenix.output.errors.detail, field: null, requestId: phoenix.output.traceId ?? null }
   }
 
   const bare = v.safeParse(bareShape, body)

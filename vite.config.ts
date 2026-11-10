@@ -33,6 +33,9 @@ const config = defineConfig({
     sourcemap: false,
     assetsInlineLimit: 0
   },
+  worker: {
+    format: "es"
+  },
   plugins: [
     tanstackStart({
       spa: {

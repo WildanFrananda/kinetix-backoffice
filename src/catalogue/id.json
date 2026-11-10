@@ -126,6 +126,8 @@
   "nav.categories": "Kategori",
   "nav.stock": "Stok",
   "nav.predicates": "Pemeriksaan kredensial",
+  "nav.dispatch": "Penugasan",
+  "nav.fleet": "Armada",
   "copy.label": "Salin {label}",
   "copy.done": "Tersalin",
   "overview.approvals.reviewSellers": "Tinjau penjual",

@@ -29,5 +29,12 @@ async function docsEndpoint(id: string): Promise<DocsEndpoint> {
   throw new Error(`kinetix-docs documents no endpoint ${id}`)
 }
 
+async function docsServiceAnswers(service: string): Promise<DocsCase[]> {
+  const module = (await import(`${docsDirectory}/src/site/rest/endpoints/${service}.ts`)) as Record<string, unknown>
+  const answers = module[`${service}Answers`]
+
+  return Array.isArray(answers) ? (answers as DocsCase[]) : []
+}
+
 export type { DocsEndpoint }
-export { docsEndpoint }
+export { docsEndpoint, docsServiceAnswers }

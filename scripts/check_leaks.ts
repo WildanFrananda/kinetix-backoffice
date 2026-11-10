@@ -9,8 +9,17 @@ if (denylist === undefined) {
 }
 
 const roots = ["src", "public", "scripts", "tests", "e2e", "nginx", "toolchain", "bin", ".github"]
-const files = ["Dockerfile", "README.md", "CLAUDE.md", "package.json", ".gitlab-ci.yml", "shared.lock.json"]
-const binary = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".ico", ".woff", ".woff2"])
+const files = [
+  "Dockerfile",
+  "README.md",
+  "CLAUDE.md",
+  "package.json",
+  ".gitlab-ci.yml",
+  "shared.lock.json",
+  "map_assets.lock.json"
+]
+
+const binary = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".ico", ".woff", ".woff2", ".pbf"])
 const rules = leakRules(denylist)
 
 function listed(root: string): string[] {

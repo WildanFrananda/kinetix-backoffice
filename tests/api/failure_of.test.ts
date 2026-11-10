@@ -184,4 +184,43 @@ describe("failureOf", () => {
     expect(failureOf(400, new Headers(), { unexpected: true })).toEqual({ kind: "unreadable", status: 400 })
     expect(failureOf(409, new Headers(), undefined)).toEqual({ kind: "unreadable", status: 409 })
   })
+
+  it("reads matching's lower-case codes as codes, and Phoenix's error envelope with its trace", () => {
+    expect(failureOf(409, new Headers(), { error: "bound_to_order" })).toEqual({
+      kind: "refused",
+      status: 409,
+      code: "bound_to_order",
+      message: "",
+      field: null,
+      numbers: {},
+      requestId: null
+    })
+
+    expect(failureOf(503, new Headers(), { error: "identity_unavailable" })).toEqual({
+      kind: "unavailable",
+      status: 503,
+      code: "identity_unavailable",
+      requestId: null
+    })
+
+    const internal = {
+      errors: { detail: "something went wrong handling this request" },
+      traceId: "6f1c2b9e-3d4a-4f5e-8a7b-9c0d1e2f3a4b"
+    }
+
+    expect(failureOf(500, new Headers(), internal)).toEqual({
+      kind: "refused",
+      status: 500,
+      code: null,
+      message: "something went wrong handling this request",
+      field: null,
+      numbers: {},
+      requestId: "6f1c2b9e-3d4a-4f5e-8a7b-9c0d1e2f3a4b"
+    })
+
+    expect(failureOf(401, new Headers(), { error: "unauthorized" })).toMatchObject({
+      code: null,
+      message: "unauthorized"
+    })
+  })
 })

@@ -2,7 +2,7 @@ import * as v from "valibot"
 import { describe, expect, it } from "vitest"
 import { failureOf } from "../../src/api/failure_of"
 import { backofficeCalls, otherAppOnly, sellerExamples } from "./backoffice_calls"
-import { docsEndpoint } from "./docs_endpoints"
+import { docsEndpoint, docsServiceAnswers } from "./docs_endpoints"
 
 function pathPattern(template: string): RegExp {
   const pieces = template.split(/\{[^}]+\}/).map((piece) => piece.replace(/[.*+?^$()|[\]\\]/g, "\\$&"))
@@ -66,6 +66,17 @@ describe.each(backofficeCalls.map((call) => [call.endpoint, call] as const))("%s
     for (const answer of endpoint.cases.filter((candidate) => candidate.status >= 400)) {
       const failure = failureOf(answer.status, new Headers({ "Retry-After": "1" }), answer.json)
       expect(failure.kind, answer.when).not.toBe("unreadable")
+    }
+  })
+})
+
+const servicesReadWhole = ["matching"]
+
+describe.each(servicesReadWhole)("every answer the docs list for any request to %s", (service) => {
+  it("is read as a known failure", async () => {
+    for (const answer of await docsServiceAnswers(service)) {
+      const failure = failureOf(answer.status, new Headers({ "Retry-After": "1" }), answer.json)
+      expect(failure.kind, `${service} ${answer.status} ${answer.when}`).not.toBe("unreadable")
     }
   })
 })

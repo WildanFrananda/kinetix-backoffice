@@ -13,6 +13,8 @@ import { Route as Signed_inRouteImport } from './routes/_signed_in'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as Signed_inIndexRouteImport } from './routes/_signed_in/index'
 import { Route as Signed_inAccountRouteImport } from './routes/_signed_in/account'
+import { Route as Signed_inDispatchRouteImport } from './routes/_signed_in/dispatch'
+import { Route as Signed_inFleetRouteImport } from './routes/_signed_in/fleet'
 import { Route as Signed_inApprovalsIndexRouteImport } from './routes/_signed_in/approvals.index'
 import { Route as Signed_inApprovalsCouriersRouteImport } from './routes/_signed_in/approvals.couriers'
 import { Route as Signed_inApprovalsSellersRouteImport } from './routes/_signed_in/approvals.sellers'
@@ -37,6 +39,16 @@ const Signed_inIndexRoute = Signed_inIndexRouteImport.update({
 const Signed_inAccountRoute = Signed_inAccountRouteImport.update({
   id: '/account',
   path: '/account',
+  getParentRoute: () => Signed_inRoute,
+} as any)
+const Signed_inDispatchRoute = Signed_inDispatchRouteImport.update({
+  id: '/dispatch',
+  path: '/dispatch',
+  getParentRoute: () => Signed_inRoute,
+} as any)
+const Signed_inFleetRoute = Signed_inFleetRouteImport.update({
+  id: '/fleet',
+  path: '/fleet',
   getParentRoute: () => Signed_inRoute,
 } as any)
 const Signed_inApprovalsIndexRoute = Signed_inApprovalsIndexRouteImport.update({
@@ -77,6 +89,8 @@ export interface FileRoutesByFullPath {
   '/': typeof Signed_inIndexRoute
   '/sign-in': typeof SignInRoute
   '/account': typeof Signed_inAccountRoute
+  '/dispatch': typeof Signed_inDispatchRoute
+  '/fleet': typeof Signed_inFleetRoute
   '/approvals/couriers': typeof Signed_inApprovalsCouriersRoute
   '/approvals/sellers': typeof Signed_inApprovalsSellersRoute
   '/catalog/categories': typeof Signed_inCatalogCategoriesRoute
@@ -87,6 +101,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/account': typeof Signed_inAccountRoute
+  '/dispatch': typeof Signed_inDispatchRoute
+  '/fleet': typeof Signed_inFleetRoute
   '/': typeof Signed_inIndexRoute
   '/approvals/couriers': typeof Signed_inApprovalsCouriersRoute
   '/approvals/sellers': typeof Signed_inApprovalsSellersRoute
@@ -100,6 +116,8 @@ export interface FileRoutesById {
   '/_signed_in': typeof Signed_inRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/_signed_in/account': typeof Signed_inAccountRoute
+  '/_signed_in/dispatch': typeof Signed_inDispatchRoute
+  '/_signed_in/fleet': typeof Signed_inFleetRoute
   '/_signed_in/': typeof Signed_inIndexRoute
   '/_signed_in/approvals/couriers': typeof Signed_inApprovalsCouriersRoute
   '/_signed_in/approvals/sellers': typeof Signed_inApprovalsSellersRoute
@@ -114,6 +132,8 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-in'
     | '/account'
+    | '/dispatch'
+    | '/fleet'
     | '/approvals/couriers'
     | '/approvals/sellers'
     | '/catalog/categories'
@@ -124,6 +144,8 @@ export interface FileRouteTypes {
   to:
     | '/sign-in'
     | '/account'
+    | '/dispatch'
+    | '/fleet'
     | '/'
     | '/approvals/couriers'
     | '/approvals/sellers'
@@ -136,6 +158,8 @@ export interface FileRouteTypes {
     | '/_signed_in'
     | '/sign-in'
     | '/_signed_in/account'
+    | '/_signed_in/dispatch'
+    | '/_signed_in/fleet'
     | '/_signed_in/'
     | '/_signed_in/approvals/couriers'
     | '/_signed_in/approvals/sellers'
@@ -178,6 +202,20 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof Signed_inAccountRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
+    '/_signed_in/dispatch': {
+      id: '/_signed_in/dispatch'
+      path: '/dispatch'
+      fullPath: '/dispatch'
+      preLoaderRoute: typeof Signed_inDispatchRouteImport
+      parentRoute: typeof Signed_inRoute
+    }
+    '/_signed_in/fleet': {
+      id: '/_signed_in/fleet'
+      path: '/fleet'
+      fullPath: '/fleet'
+      preLoaderRoute: typeof Signed_inFleetRouteImport
       parentRoute: typeof Signed_inRoute
     }
     '/_signed_in/approvals/': {
@@ -227,6 +265,8 @@ declare module '@tanstack/react-router' {
 
 interface Signed_inRouteChildren {
   Signed_inAccountRoute: typeof Signed_inAccountRoute
+  Signed_inDispatchRoute: typeof Signed_inDispatchRoute
+  Signed_inFleetRoute: typeof Signed_inFleetRoute
   Signed_inIndexRoute: typeof Signed_inIndexRoute
   Signed_inApprovalsCouriersRoute: typeof Signed_inApprovalsCouriersRoute
   Signed_inApprovalsSellersRoute: typeof Signed_inApprovalsSellersRoute
@@ -238,6 +278,8 @@ interface Signed_inRouteChildren {
 
 const Signed_inRouteChildren: Signed_inRouteChildren = {
   Signed_inAccountRoute: Signed_inAccountRoute,
+  Signed_inDispatchRoute: Signed_inDispatchRoute,
+  Signed_inFleetRoute: Signed_inFleetRoute,
   Signed_inIndexRoute: Signed_inIndexRoute,
   Signed_inApprovalsCouriersRoute: Signed_inApprovalsCouriersRoute,
   Signed_inApprovalsSellersRoute: Signed_inApprovalsSellersRoute,

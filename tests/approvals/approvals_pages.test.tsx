@@ -1,7 +1,7 @@
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, RouterProvider } from "@tanstack/react-router"
 import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest"
 import { approvalsSearch } from "../../src/features/approvals/approvals_search"
 import { CourierApprovalsPage } from "../../src/features/approvals/CourierApprovalsPage"
 import { periodStarts } from "../../src/features/approvals/period_starts"
@@ -320,6 +320,11 @@ describe("seller applications", () => {
   })
 
   it("counts the decisions of today, this week and this month from identity, and adds a new one at once", async () => {
+    vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 9, 28, 10) })
+    onTestFinished(() => {
+      vi.useRealTimers()
+    })
+
     tallies.length = 0
     bff = fakeBff({
       ...queueCounts,

@@ -4,7 +4,11 @@ import accountId from "../../src/catalogue/account/id.json"
 import approvalsEn from "../../src/catalogue/approvals/en.json"
 import approvalsId from "../../src/catalogue/approvals/id.json"
 import en from "../../src/catalogue/en.json"
+import fleetEn from "../../src/catalogue/fleet/en.json"
+import fleetId from "../../src/catalogue/fleet/id.json"
 import id from "../../src/catalogue/id.json"
+import mapEn from "../../src/catalogue/map/en.json"
+import mapId from "../../src/catalogue/map/id.json"
 import { formatText } from "../../src/i18n/format_text"
 import { preferredLocale } from "../../src/i18n/preferred_locale"
 
@@ -15,7 +19,9 @@ function placeholders(text: string): string[] {
 const pairs: ReadonlyArray<[string, Record<string, string>, Record<string, string>]> = [
   ["the shell", en, id],
   ["approvals", approvalsEn, approvalsId],
-  ["the account page", accountEn, accountId]
+  ["the account page", accountEn, accountId],
+  ["fleet and dispatch", fleetEn, fleetId],
+  ["the map", mapEn, mapId]
 ]
 
 describe.each(pairs)("the catalogues of %s", (_, english, indonesian) => {
@@ -33,7 +39,7 @@ describe.each(pairs)("the catalogues of %s", (_, english, indonesian) => {
 
 describe("feature catalogues", () => {
   it("never redefine a key of the shell's", () => {
-    for (const feature of [approvalsEn, accountEn]) {
+    for (const feature of [approvalsEn, accountEn, fleetEn, mapEn]) {
       expect(Object.keys(feature).filter((key) => Object.hasOwn(en, key))).toEqual([])
     }
   })
