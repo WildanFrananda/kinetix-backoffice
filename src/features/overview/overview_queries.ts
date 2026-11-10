@@ -8,6 +8,10 @@ import { sagasNeedingAttentionCall } from "../../api/calls/sagas_needing_attenti
 
 const overviewKey = ["bff", "overview"] as const
 
+const returnsKey = [...overviewKey, "returns"] as const
+
+const sagaCountKey = [...overviewKey, "sagas"] as const
+
 function every(poll: boolean, milliseconds: number): number | false {
   return poll ? milliseconds : false
 }
@@ -38,7 +42,7 @@ function courierApplicationsQuery(poll: boolean) {
 
 function sagasQuery(poll: boolean) {
   return queryOptions({
-    queryKey: [...overviewKey, "sagas"],
+    queryKey: sagaCountKey,
     queryFn: ({ signal }) => bffFetch(sagasNeedingAttentionCall, signal, "background"),
     refetchInterval: every(poll, 60_000)
   })
@@ -46,7 +50,7 @@ function sagasQuery(poll: boolean) {
 
 function returnsQuery(poll: boolean) {
   return queryOptions({
-    queryKey: [...overviewKey, "returns"],
+    queryKey: returnsKey,
     queryFn: ({ signal }) => bffFetch(returnsNeedingAttentionCall, signal, "background"),
     refetchInterval: every(poll, 60_000)
   })
@@ -56,7 +60,9 @@ export {
   courierApplicationsQuery,
   dispatchSummaryQuery,
   overviewKey,
+  returnsKey,
   returnsQuery,
+  sagaCountKey,
   sagasQuery,
   sellerApplicationsQuery
 }

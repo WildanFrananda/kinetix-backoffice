@@ -9,10 +9,11 @@ import styles from "./Overview.module.css"
 import { returnsQuery } from "./overview_queries"
 import { failureIn, updatedAt } from "./query_view"
 import { ReturnsTable } from "./ReturnsTable"
+import { summarizeReturns } from "./returns_summary"
 
 function ReturnsPanel({ poll }: { poll: boolean }) {
   const text = useText()
-  const returns = useQuery(returnsQuery(poll))
+  const returns = useQuery({ ...returnsQuery(poll), select: summarizeReturns })
 
   function refresh(): void {
     void returns.refetch()

@@ -5,6 +5,7 @@ import { bffRequest } from "../../api/bff_request"
 import { assignDispatchCall } from "../../api/calls/assign_dispatch_call"
 import { cancelDispatchCall } from "../../api/calls/cancel_dispatch_call"
 import { unassignDispatchCall } from "../../api/calls/unassign_dispatch_call"
+import { outcomeUnknown } from "../../api/outcome_unknown"
 import { formatText } from "../../i18n/format_text"
 import type { DispatchJob } from "../../types/dispatch_job.type"
 import type { FailureExplanation } from "../../types/failure_explanation.type"
@@ -13,7 +14,7 @@ import type { JobAction } from "../../types/job_action.type"
 import type { JobReport } from "../../types/job_report.type"
 import { jobKey, jobQuery, jobsKey } from "./fleet_queries"
 import { patchJob, refreshBoard, storeJob } from "./job_cache"
-import { jobFailure, uncertain } from "./job_failure"
+import { jobFailure } from "./job_failure"
 
 type ActionState = {
   jobId: number
@@ -100,7 +101,7 @@ function useJobActions(jobId: number, text: FleetCatalogue) {
       return
     }
 
-    if (uncertain(failure)) {
+    if (outcomeUnknown(failure)) {
       const fresh = await reread()
 
       if (fresh !== undefined && fresh !== null && made(action, fresh)) {

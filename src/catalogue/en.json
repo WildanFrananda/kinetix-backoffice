@@ -138,5 +138,11 @@
   "challenge.passkey.declined": "The passkey was not used. Try again, or enter the code.",
   "challenge.passkey.refused": "That passkey was not accepted. Try again, or enter the code.",
   "challenge.passkey.unsupported": "This account has a passkey, but this browser cannot use it here. Enter the code instead.",
-  "challenge.passkey.unusable": "This browser could not use a passkey at this address. Enter the code instead."
+  "challenge.passkey.unusable": "This browser could not use a passkey at this address. Enter the code instead.",
+  "nav.orders": "Orders",
+  "nav.sagas": "Stuck checkouts",
+  "nav.returns": "Returns",
+  "palette.lookup": "Look up",
+  "palette.findOrder": "Find order {number}",
+  "palette.findReturn": "Find return {number}"
 }

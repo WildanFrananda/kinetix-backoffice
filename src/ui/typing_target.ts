@@ -5,7 +5,11 @@ function typingTarget(target: EventTarget | null): boolean {
     return false
   }
 
-  return typingTargets.has(target.tagName) || target.isContentEditable || target.closest("[role='dialog']") !== null
+  return (
+    typingTargets.has(target.tagName) ||
+    target.isContentEditable ||
+    target.closest("[role='dialog'], [role='alertdialog']") !== null
+  )
 }
 
 export { typingTarget }

@@ -338,7 +338,9 @@ called, because the list holds every category with all three fields.
   changes. `tests/categories/cabinet_model.test.ts` refuses any two boxes passing through each other.
 - **Keys** (`src/ui/use_page_keys.ts`, `src/ui/KeyHints.tsx`, shared with the stock screen; approvals keep their own hook
   and now share `typing_target.ts`): J/K move through the list as filtered, N opens the new form, / goes to the filter,
-  D asks to delete the chosen category. Ignored while typing or with a dialog open, like the approvals' keys.
+  D asks to delete the chosen category. Ignored while typing or with a dialog open, like the approvals' keys. Since
+  F6 both key hooks share `src/ui/page_key_listener.ts`, which takes the page's keys before a list's type-to-select
+  (see "Orders and returns").
 - **Tests**: `tests/categories/` (the page with axe, create, the slug rule, taken, rename and the warning, a category
   deleted by someone else, in use then deleted, the keys; the slug and the rules; the cabinet). Contract: four calls,
   150 checks.
@@ -667,6 +669,109 @@ a street map, MapLibre, a fallback without WebGL; Indonesia at z15 in production
   `--disable-3d-apis` the grid drawing with its sentence and no request to `/tiles/` or `/map/`. No violation, no
   console problem, no overflow. Map chunk 299.7 KB gzip, worker 147.6 KB.
 
+## Orders and returns (F6, 2026-11-10)
+
+`/orders`, `/orders/sagas` and `/orders/returns` (`src/features/orders/`) follow infra `docs/BACKOFFICE-F6.md` and
+`kinetix-docs` `apis/rest/backoffice/orders-and-returns`: `order.searchOrders` (the one gap, built by order the same
+day), `getOrder`, `completeOrder`, `listSagasNeedingAttention`, `countSagasNeedingAttention`,
+`listReturnsNeedingAttention` and `rejectReturn`, one call file each in `src/api/calls/`, schemas in
+`order_schemas.ts`. A sub-navigation (`OrdersSwitch`) joins the three with the stuck-checkout and return counts.
+
+- **The search** (`OrderFilters`, `orders_search.ts`, `order_query_of.ts`): status set, the days placed, seller and
+  buyer principal, order number, newest first, `before` paging; every filter, the cursor and the chosen order live in
+  the address (`status` as order's comma-separated names, in order's own order). The days are the admin's own
+  (`local_day.ts`): `createdFrom` is the first day's local midnight and `createdTo` the midnight after the last day,
+  each written with the offset that holds at that instant (`2026-11-10T00:00:00+07:00`), so `[from, to)` includes the
+  last day and a day that starts at 01:00 under daylight saving is still right; the form names the zone it used (Tor
+  Browser's `resistFingerprinting` reports UTC, and the note then says so). Checked before asking, as order's
+  `OrderSearchParameters` checks them: a first day after the last, and a principal that is not a 36-character UUID
+  (sent lower-case, as identity issues them); an order number is sent trimmed and upper-cased, as order issues them.
+  Order still decides: `INVALID_STATUS`, `INVALID_CREATED_RANGE`, `INVALID_MERCHANT`, `INVALID_CUSTOMER` and
+  `INVALID_ORDER_NUMBER` are said in words with order's sentence quoted and "Clear filters"; `INVALID_CURSOR` (a page
+  link order no longer reads) offers the newest page. A search by order number that finds one order opens it, which is
+  how ⌘K finds an order.
+- **`order.searchOrders` is in the contract test** since the REST reference documented it at order v1.6.0 (2026-11-10),
+  with every query field filled (status set, both instants with offsets, merchant, customer, order number, the
+  documented cursor), so a parameter the docs do not list, or a documented answer the schema cannot read, fails CI.
+- **An order** (`OrderView`) is read only after the choice rests 350 ms (`src/ui/use_settled.ts`, moved from the
+  approvals): order audits every admin read of an order, so J held down must not write a line per row. A 404 is "no
+  such order". The detail shows the lines, totals, shipping and fee basis in words. Its timeline is what the answers
+  carry: `getOrder` has only `createdAt`; delivered, completed and last changed come from the search row (from the page,
+  or one search by order number when the order is not on it). Order's lifecycle log, which has every step, is served
+  by no REST endpoint. No endpoint gives an order's return either: the detail shows the returns needing attention
+  against it (the same query as the returns page) and says order lists only those. "Lines" is order's `itemCount`, the
+  number of lines, in the table and the detail alike.
+- **Complete early** is offered only for a `DELIVERED` order with no listed return against it (otherwise the page names
+  the return); C or the button, confirmed in an `alertdialog` with "Keep it open" focused. A 200 sets the cached order
+  to `COMPLETED` (order has decided) and reads the results again, and the notice says where the escrow went:
+  `completion_text.ts` maps order's two fixed `detail` sentences to the admin's words and quotes any other. A refusal
+  stays in the dialog in words with order's sentence (`order_failure.ts`); a 404 or 409 also reads the order, the
+  results and the returns again. After a 500, a 503 or a lost connection the outcome is unknown: the dialog says so and
+  the button becomes "Send it again", and an `ORDER_ALREADY_COMPLETED` after that is reported as done.
+- **Stuck checkouts** (`SagasPage`, read only): order's list (200 at most, newest flagged first) with a client filter
+  over order number, saga id, failure code and request id; a saga's facts and each step still held with order's
+  `remedy` verbatim (`<pre lang="en">`). The count is the Overview's own query and key, polled once a minute while the
+  admin is present (`BACKOFFICE.md` §6); nothing else on F6 polls. The list is read on arrival and on request, and once
+  more when a count read after it disagrees with it (both under 200), never on a timer.
+- **Returns** (`ReturnsPage`): the list shares the Overview's query key (`returnsKey`); the Overview now derives its
+  summary with `select` (`returns_summary.ts`), so moving between the two costs nothing and a rejection updates both.
+  Only an `OPEN` return with no goods back can be rejected (R or the button): the reason is required, trimmed and at
+  most 500 characters (order keeps the first 500), with the textarea focused. A 204 removes the return from the cached
+  list, reads it again, moves to the next and offers the order to complete early. A refusal stays in the dialog in
+  words; a 404 or 409 reads the list again, and the return's view stays (its last reading, marked as decided) so the
+  words in the dialog survive the list dropping it. Outcome unknown: "Send it again", and `RETURN_ALREADY_REJECTED`
+  after that reads as done. A `GOODS_RECEIVED` return shows the refund owed and why it stopped, and no rejection.
+- **Page keys win over list typeahead** (`src/ui/page_key_listener.ts`, 2026-11-10, asked for by the coordinator once
+  F6 found it). React Aria's `ListBox` type-to-select calls `preventDefault` and `stopPropagation` when a printable key
+  matches the start of an item's `textValue`, so with focus in a list a page key never reached the window listener: R
+  did nothing on the returns page (every return starts "RMA-"), seen in Chrome. The same held for A or R on a seller
+  named "Apotek…" or "Roti…", K on a courier email "kurir…" and on every courier in Indonesian ("Kurir 17"), D on a
+  category "Dapur", B on bin "B-02-1", W or K on a check's label. Both key hooks (`use_page_keys` and the approvals'
+  `use_queue_keys`) now go through one listener on `window` in the capture phase, which runs before React Aria's: a key
+  the page names belongs to the page, even while its action is unavailable (it is stopped there and never reaches the
+  list), and every other key still reaches the list, so typing digits or other letters still jumps through it. Held
+  keys stay reserved but act once. Ignored, as before, while typing (inputs, text areas, editable content), with a
+  modifier, and inside a dialog, which now includes an `alertdialog`: until then J or A pressed with focus on a
+  confirmation's button reached the page behind it. Every list page has a test pressing its letters with focus on an
+  option; with the listener moved back to the bubble phase seven fail (returns, sellers, couriers, credential checks,
+  categories, stock, fleet in Indonesian). Dispatch, sagas and orders pass either way, because their items start with
+  digits or "ORD-" (orders is a table of links); their tests guard against that changing. Seen in Chrome over CDP on
+  the sellers' queue: focus on "Jamu Ibu Rina", K and J move the choice, A opens "Approve Jamu Ibu Rina?" with Approve
+  focused, J inside the dialog does nothing, Escape returns focus to the option, R opens the rejection.
+- **A detail no longer opens a confirmation nobody asked for.** The categories editor, a check's detail and a bin's
+  detail opened their dialog whenever the page's request counter was above zero, and each is remounted per item, so
+  after D, W, or B/E once, choosing another item opened the same dialog for it (found by the tests above). Each now
+  keeps the counter it mounted with and acts only on a later one, as the fleet's `JobView` and F6's views do.
+- **⌘K** (`palette_lookups.ts`): typing an order number (`ORD-yyyymmdd-xxxxxxxx`, any case) offers "Find order …",
+  which opens `/orders?orderNumber=…` (the search, then the one order); a return number offers "Find return …" on the
+  returns page. The palette's input is controlled for this and emptied when it closes.
+- **Keys**: J/K move, C complete early, / the order number field (orders); J/K, / the filter (sagas); J/K, R reject,
+  / the filter (returns). No drawing: the data are lists and money, and the plan made one optional.
+- **Shared pieces**: `src/api/outcome_unknown.ts` (was the fleet's `uncertain`), `src/ui/use_settled.ts`;
+  `fakeBff` also records each request's address (`addresses`) for the query parameters.
+- **Tests**: `tests/orders/` (the three pages with axe; filters to the address and back; a day range and a principal
+  refused before asking; older and newest; order's 400 in words; a cursor order cannot read; an order's lines, totals,
+  shipping, timeline and return; complete with C and the escrow sentence; a refusal kept in the dialog and the order read
+  again; an unknown outcome sent again; an order not delivered; one result opened, J/K; an order not found; the sagas
+  list, steps and remedies, the filter, the count-driven re-read happening once; returns oldest first, reject with R from
+  the list and a reason, a 409 in words with the list read again, a 404 with the words kept after the list drops it, a
+  return whose goods came back; the days as instants and the address schema) and the palette's order lookup in
+  `tests/shell/`. 313 tests then; 322 with the page-key tests below. Contract: four calls more (`order.getOrder`, `completeOrder`, `rejectReturn`,
+  `listSagasNeedingAttention`), 295 checks against `kinetix-docs` `main`; a wrong path and an extra body field on
+  `rejectReturn` were planted and caught.
+- **Budget**: 198.4 KiB of 200 (from 196.1): three sidebar entries (Receipt and LinkBreak generated, ArrowUUpLeft now
+  in the initial load), the three routes' search validation and six shell keys. The routes are lazy (orders 6.0 KiB,
+  returns 3.8, sagas 3.2, shared 9.4 with the catalogue). The next feature has 1.6 KiB.
+- **Seen in Chrome over CDP** (headless, the production image's nginx by digest with this build mounted read-only and
+  the CSP rendered at start, behind a stateful stub edge in Bun; no image built): 1280 light, 1280 dark and 390 dark.
+  The search, older and newest, the status filter in the address, an order read, C with "Keep it open" focused,
+  completed with the retried-release sentence, the order leaving the filtered list and found by number for its times,
+  order's 400 for a day range in words, the sagas with their remedies, a return rejected with R and a blank reason
+  refused first, a 409 kept in the dialog after the list dropped the return, the palette finding an order by number;
+  in dark a blocked completion and one whose release payment refused. Every setup: `scrollWidth` equal to
+  `innerWidth`, no `securitypolicyviolation`, no exception; the only console lines are the 400 and 409 the stub
+  answers on purpose. Not run: the lab E2E.
+
 ## Files shared with kinetix-docs
 
 `shared.lock.json` lists the files copied from `kinetix-docs`: the design tokens (`src/styles/kx-tokens.css`), the
@@ -751,8 +856,8 @@ E2E_BASE_URL=http://<the lab's onion address> E2E_TOR_PROXY=socks5://kxlab-tor-c
 
 ## Not yet here
 
-- ⌘K jumps between the screens that exist (the two queues, the categories, the board and the fleet included) and
-  switches theme and language; lookups of an order, a job, an application or a SKU by id are not built yet (the board's
-  filter opens a job by number).
+- ⌘K jumps between the screens that exist and switches theme and language, and finds an order or a return by its
+  number (F6); lookups of a job, an application or a SKU by id are not built yet (the board's filter opens a job by
+  number).
 - Live updates over a WebSocket (X21) instead of polling the board and the fleet.
 - A reason with a rejection: identity stores none, for sellers or couriers (infra `BACKOFFICE.md` §7.2).

@@ -9,6 +9,8 @@ import fleetId from "../../src/catalogue/fleet/id.json"
 import id from "../../src/catalogue/id.json"
 import mapEn from "../../src/catalogue/map/en.json"
 import mapId from "../../src/catalogue/map/id.json"
+import ordersEn from "../../src/catalogue/orders/en.json"
+import ordersId from "../../src/catalogue/orders/id.json"
 import { formatText } from "../../src/i18n/format_text"
 import { preferredLocale } from "../../src/i18n/preferred_locale"
 
@@ -21,7 +23,8 @@ const pairs: ReadonlyArray<[string, Record<string, string>, Record<string, strin
   ["approvals", approvalsEn, approvalsId],
   ["the account page", accountEn, accountId],
   ["fleet and dispatch", fleetEn, fleetId],
-  ["the map", mapEn, mapId]
+  ["the map", mapEn, mapId],
+  ["orders and returns", ordersEn, ordersId]
 ]
 
 describe.each(pairs)("the catalogues of %s", (_, english, indonesian) => {
@@ -39,7 +42,7 @@ describe.each(pairs)("the catalogues of %s", (_, english, indonesian) => {
 
 describe("feature catalogues", () => {
   it("never redefine a key of the shell's", () => {
-    for (const feature of [approvalsEn, accountEn, fleetEn, mapEn]) {
+    for (const feature of [approvalsEn, accountEn, fleetEn, mapEn, ordersEn]) {
       expect(Object.keys(feature).filter((key) => Object.hasOwn(en, key))).toEqual([])
     }
   })

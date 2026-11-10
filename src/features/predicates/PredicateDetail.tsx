@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { BffError } from "../../api/bff_error"
 import { bffFetch } from "../../api/bff_fetch"
 import { withdrawPredicateCall } from "../../api/calls/withdraw_predicate_call"
@@ -32,11 +32,15 @@ function PredicateDetail({
   const numbers = new Intl.NumberFormat(locale)
   const queryClient = useQueryClient()
   const [asking, setAsking] = useState(false)
+  const handled = useRef(withdrawRequest)
 
   useEffect(() => {
-    if (withdrawRequest > 0) {
-      setAsking(true)
+    if (withdrawRequest === handled.current) {
+      return
     }
+
+    handled.current = withdrawRequest
+    setAsking(true)
   }, [withdrawRequest])
 
   const withdraw = useMutation({

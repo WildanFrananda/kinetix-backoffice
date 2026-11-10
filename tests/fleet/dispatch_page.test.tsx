@@ -471,6 +471,27 @@ describe("the dispatch board", () => {
     await waitFor(() => expect(router.state.location.search).toEqual({ job: 4813 }))
   })
 
+  it("takes J and K from the page with focus on a job in the list", async () => {
+    bff = fakeBff(
+      board([pendingJob, deliveredJob], {
+        [`GET ${base}/4813`]: detail(pendingJob),
+        [`GET ${base}/4812`]: detail(deliveredJob),
+        "GET /bff/api/v1/matching/drivers/21": () => Response.json({ data: idleCourier })
+      })
+    )
+
+    const user = userEvent.setup()
+    const { router } = show("/dispatch")
+
+    await user.click(await screen.findByRole("option", { name: /4813/ }))
+    expect(screen.getByRole("option", { name: /4813/ })).toHaveFocus()
+    await waitFor(() => expect(router.state.location.search).toEqual({ job: 4813 }))
+    await user.keyboard("j")
+    await waitFor(() => expect(router.state.location.search).toEqual({ job: 4812 }))
+    await user.keyboard("k")
+    await waitFor(() => expect(router.state.location.search).toEqual({ job: 4813 }))
+  })
+
   it("says a job matching does not have, and opens a job by number from the filter", async () => {
     bff = fakeBff(
       board([pendingJob], {

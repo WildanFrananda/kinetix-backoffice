@@ -8,11 +8,12 @@ import { PanelProblem } from "../../ui/PanelProblem"
 import styles from "./Overview.module.css"
 import { returnsQuery, sagasQuery } from "./overview_queries"
 import { failureIn, updatedAt } from "./query_view"
+import { summarizeReturns } from "./returns_summary"
 
 function AttentionPanel({ poll }: { poll: boolean }) {
   const text = useText()
   const sagas = useQuery(sagasQuery(poll))
-  const returns = useQuery(returnsQuery(poll))
+  const returns = useQuery({ ...returnsQuery(poll), select: summarizeReturns })
   const failed = sagas.isError && sagas.data === undefined && returns.isError && returns.data === undefined
   const stamps = [sagas.dataUpdatedAt, returns.dataUpdatedAt].filter((stamp) => stamp > 0)
   const settled = sagas.data === 0 && returns.data?.count === 0

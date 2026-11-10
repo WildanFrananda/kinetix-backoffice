@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router"
+import { useEffect, useState } from "react"
 import {
   Autocomplete,
   Dialog,
@@ -17,16 +18,31 @@ import { useText } from "../../i18n/use_text"
 import { MagnifyingGlass } from "../icons/MagnifyingGlass"
 import styles from "./CommandPalette.module.css"
 import { paletteGroups } from "./palette_groups"
+import { paletteLookups } from "./palette_lookups"
 
 function CommandPalette({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: (open: boolean) => void }) {
   const text = useText()
   const navigate = useNavigate()
   const { signOut } = useSignOut()
   const { contains } = useFilter({ sensitivity: "base" })
-  const groups = paletteGroups(text, {
+  const [typed, setTyped] = useState("")
+  const lookup = paletteLookups(text, typed, {
+    findOrder: (number) => void navigate({ to: "/orders", search: { orderNumber: number } }),
+    findReturn: (number) => void navigate({ to: "/orders/returns", search: { selected: number } })
+  })
+
+  const jumps = paletteGroups(text, {
     go: (to) => void navigate({ to }),
     signOut: () => void signOut()
   })
+
+  const groups = lookup === null ? jumps : [lookup, ...jumps]
+
+  useEffect(() => {
+    if (!isOpen) {
+      setTyped("")
+    }
+  }, [isOpen])
 
   const commands = new Map(groups.flatMap((group) => group.commands.map((command) => [command.id, command] as const)))
 
@@ -34,7 +50,7 @@ function CommandPalette({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChang
     <ModalOverlay isOpen={isOpen} onOpenChange={onOpenChange} isDismissable className={styles.overlay}>
       <Modal className={styles.modal}>
         <Dialog aria-label={text["palette.title"]} className={styles.dialog}>
-          <Autocomplete filter={contains}>
+          <Autocomplete filter={contains} inputValue={typed} onInputChange={setTyped}>
             <TextField aria-label={text["palette.title"]} autoFocus className={styles.search}>
               <MagnifyingGlass aria-hidden="true" className={styles.searchIcon} />
               <Input type="search" className={styles.input} placeholder={text["palette.placeholder"]} />

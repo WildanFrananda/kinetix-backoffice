@@ -9,6 +9,7 @@ import {
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { ordersSearch } from "../../src/features/orders/orders_search"
 import { PageHeader } from "../../src/ui/PageHeader"
 import { AppShell } from "../../src/ui/shell/AppShell"
 import { AppProviders, testQueryClient } from "../support/app_providers"
@@ -48,6 +49,13 @@ function shellAt(path: string) {
     component: () => <PageHeader eyebrow="Workspace" title="Account" />
   })
 
+  const orders = createRoute({
+    getParentRoute: () => root,
+    path: "/orders",
+    validateSearch: ordersSearch,
+    component: () => <PageHeader eyebrow="Orders" title="Orders" />
+  })
+
   const signIn = createRoute({
     getParentRoute: () => outside,
     path: "/sign-in",
@@ -55,7 +63,7 @@ function shellAt(path: string) {
   })
 
   return createRouter({
-    routeTree: outside.addChildren([root.addChildren([overview, account]), signIn]),
+    routeTree: outside.addChildren([root.addChildren([overview, account, orders]), signIn]),
     history: createMemoryHistory({ initialEntries: [path] })
   })
 }
@@ -96,6 +104,34 @@ describe("the app shell", () => {
     const heading = await screen.findByRole("heading", { level: 1, name: "Account" })
     await waitFor(() => expect(heading).toHaveFocus())
     expect(screen.queryByRole("dialog")).toBeNull()
+  })
+
+  it("finds an order by its number from the command palette, through the orders search", async () => {
+    bff = fakeBff({
+      "GET /bff/session": () => Response.json(adminSession()),
+      "GET /bff/api/v1/auth/me": () => Response.json({ message: "down" }, { status: 503 })
+    })
+
+    const router = shellAt("/")
+    render(
+      <AppProviders client={testQueryClient()}>
+        <RouterProvider router={router} />
+      </AppProviders>
+    )
+
+    expect(await screen.findByRole("heading", { level: 1, name: "Overview" })).toBeInTheDocument()
+
+    const user = userEvent.setup()
+    await user.keyboard("{Control>}k{/Control}")
+    await user.type(await screen.findByRole("searchbox", { name: "Command palette" }), " ord-20261022-7f3a9c1b")
+
+    expect(await screen.findByRole("menuitem", { name: "Find order ORD-20261022-7F3A9C1B" })).toBeInTheDocument()
+    expect(screen.getAllByRole("menuitem")).toHaveLength(1)
+    await user.keyboard("{ArrowDown}{Enter}")
+
+    await waitFor(() => expect(router.state.location.pathname).toBe("/orders"))
+    expect(router.state.location.search).toEqual({ orderNumber: "ORD-20261022-7F3A9C1B" })
+    expect(await screen.findByRole("heading", { level: 1, name: "Orders" })).toBeInTheDocument()
   })
 
   it("closes the command palette on the first Escape, even with text typed", async () => {

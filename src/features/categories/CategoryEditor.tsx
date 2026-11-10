@@ -1,6 +1,6 @@
 import { useForm } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { BffError } from "../../api/bff_error"
 import { bffFetch } from "../../api/bff_fetch"
 import { createCategoryCall } from "../../api/calls/create_category_call"
@@ -47,9 +47,16 @@ function CategoryEditor({
   const queryClient = useQueryClient()
   const [slugFollowsName, setSlugFollowsName] = useState(category === null)
   const [asking, setAsking] = useState(false)
+  const handled = useRef(deleteRequest)
 
   useEffect(() => {
-    if (deleteRequest > 0 && category !== null) {
+    if (deleteRequest === handled.current) {
+      return
+    }
+
+    handled.current = deleteRequest
+
+    if (category !== null) {
       setAsking(true)
     }
   }, [deleteRequest, category])

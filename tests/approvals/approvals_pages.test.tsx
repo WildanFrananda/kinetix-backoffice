@@ -201,6 +201,46 @@ describe("seller applications", () => {
     expect(await screen.findByRole("heading", { level: 2, name: "Warung Sate Pak Budi" })).toBeInTheDocument()
   })
 
+  it("takes J, K, A and R from the page with focus on an application whose name starts with them", async () => {
+    const lettered = [
+      seller(21, 71, "Apotek Sehat"),
+      seller(22, 72, "Jamu Ibu Rina"),
+      seller(23, 73, "Kedai Kopi Ria"),
+      seller(24, 74, "Roti Lapis")
+    ]
+
+    bff = fakeBff({
+      ...queueCounts,
+      "GET /bff/api/v1/sellers/applications": () => Response.json({ applications: lettered, nextAfterId: null }),
+      "GET /bff/api/v1/users/71/profile": profile("Ani Lestari"),
+      "GET /bff/api/v1/users/72/profile": profile("Rina Wijaya"),
+      "GET /bff/api/v1/users/73/profile": profile("Kurniawan"),
+      "GET /bff/api/v1/users/74/profile": profile("Budi Santoso")
+    })
+
+    const user = userEvent.setup()
+    const { router } = show("/approvals/sellers")
+    await screen.findByRole("heading", { level: 2, name: "Apotek Sehat" })
+
+    await user.click(screen.getByRole("option", { name: "Jamu Ibu Rina" }))
+    expect(screen.getByRole("option", { name: "Jamu Ibu Rina" })).toHaveFocus()
+    await waitFor(() => expect(router.state.location.search).toEqual({ selected: 22 }))
+
+    await user.keyboard("k")
+    await waitFor(() => expect(router.state.location.search).toEqual({ selected: 21 }))
+    await user.keyboard("j")
+    await waitFor(() => expect(router.state.location.search).toEqual({ selected: 22 }))
+
+    await user.keyboard("a")
+    expect(await screen.findByRole("alertdialog", { name: "Approve Jamu Ibu Rina?" })).toBeInTheDocument()
+    await user.keyboard("{Escape}")
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull())
+
+    await user.keyboard("r")
+    expect(await screen.findByRole("alertdialog", { name: "Reject Jamu Ibu Rina?" })).toBeInTheDocument()
+    expect(router.state.location.search).toEqual({ selected: 22 })
+  })
+
   it("keeps the page where it is when another application is chosen", async () => {
     bff = fakeBff({
       ...queueCounts,
@@ -430,6 +470,22 @@ describe("courier applications", () => {
     "GET /bff/api/v1/users/63/profile": profile("Budi Kurniawan"),
     "GET /bff/api/v1/users/64/profile": profile("Sari Lestari")
   }
+
+  it("takes K from the page with focus on a courier whose email starts with it", async () => {
+    bff = fakeBff(courierRoutes)
+
+    const user = userEvent.setup()
+    const { router } = show("/approvals/couriers")
+    await screen.findByRole("heading", { level: 2, name: "kurir.budi@example.com" })
+
+    await user.click(screen.getByRole("option", { name: "kurir.sari@example.com" }))
+    expect(screen.getByRole("option", { name: "kurir.sari@example.com" })).toHaveFocus()
+    await waitFor(() => expect(router.state.location.search).toEqual({ selected: 6 }))
+
+    await user.keyboard("k")
+    await waitFor(() => expect(router.state.location.search).toEqual({ selected: 5 }))
+    expect(await screen.findByRole("heading", { level: 2, name: "kurir.budi@example.com" })).toBeInTheDocument()
+  })
 
   it("approves a courier by its principal", async () => {
     bff = fakeBff({
