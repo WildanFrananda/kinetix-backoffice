@@ -1,7 +1,6 @@
 :root {
-  --kx-font-sans: "IBM Plex Sans Variable", "IBM Plex Sans", system-ui, sans-serif;
-  --kx-font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
-  --kx-font-serif: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
+  --kx-font-sans: "Inter Variable", "Inter", system-ui, sans-serif;
+  --kx-font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
 
   --kx-fg: #f6f2ea;
   --kx-gray-1: #e9e4da;

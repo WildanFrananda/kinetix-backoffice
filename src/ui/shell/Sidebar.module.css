@@ -34,7 +34,7 @@
 }
 
 .name {
-  font-family: var(--kx-font-serif);
+  font-family: var(--kx-font-sans);
   font-size: 1.1875rem;
   font-weight: 600;
   color: var(--kx-fg);
