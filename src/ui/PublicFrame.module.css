@@ -15,7 +15,7 @@
 
 .name {
   margin: 0;
-  font-family: var(--kx-font-serif);
+  font-family: var(--kx-font-sans);
   font-size: 1.0625rem;
   font-weight: 600;
 }

@@ -127,7 +127,7 @@
   border: 1.5px solid var(--kx-fg);
   border-radius: var(--kx-radius);
   background: var(--kx-surface);
-  font-family: var(--kx-font-serif);
+  font-family: var(--kx-font-sans);
   font-size: clamp(1.5rem, 1rem + 2vw, 2.25rem);
   font-weight: 600;
   letter-spacing: 0.04em;
