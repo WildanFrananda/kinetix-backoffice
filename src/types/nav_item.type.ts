@@ -14,6 +14,7 @@ type NavItem = {
     | "/catalog/categories"
     | "/warehouse/stock"
     | "/seal/predicates"
+    | "/seal/cases"
     | "/account"
   label: keyof Catalogue
   icon: Icon

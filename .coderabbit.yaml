@@ -1,0 +1,23 @@
+language: "en-US"
+reviews:
+  profile: "assertive"
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "main"
+      - "development"
+  path_instructions:
+    - path: "src/**"
+      instructions: |
+        - Enforce CLAUDE.md strictly: use `type` (not `interface`, except `src/types/register.d.ts`) with one type per file in `src/types/*.type.ts`.
+        - Declare functions with `function` (arrows only as anonymous callbacks); place exports at the bottom of the file.
+        - Flag any code comments, `any`, non-null assertions (`!`), mock/placeholder data, or silent empty fallbacks on BFF/API failures.
+    - path: "src/catalogue/**"
+      instructions: |
+        Ensure English (`en.json`) and Indonesian (`id.json`) message keys stay aligned without missing or orphan entries.
+    - path: "tests/**"
+      instructions: |
+        Verify Vitest unit and contract tests (`tests/contract/`) cover new endpoints, schemas, and error states cleanly without weakening assertions.
+chat:
+  auto_reply: true
