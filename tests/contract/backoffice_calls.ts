@@ -5,6 +5,8 @@ import { assignDispatchCall } from "../../src/api/calls/assign_dispatch_call"
 import { attentionSagasCall } from "../../src/api/calls/attention_sagas_call"
 import { binStockCall } from "../../src/api/calls/bin_stock_call"
 import { cancelDispatchCall } from "../../src/api/calls/cancel_dispatch_call"
+import { caseDetailCall } from "../../src/api/calls/case_detail_call"
+import { casesCall } from "../../src/api/calls/cases_call"
 import { categoriesCall } from "../../src/api/calls/categories_call"
 import { completeOrderCall } from "../../src/api/calls/complete_order_call"
 import { courierApplicationsCall } from "../../src/api/calls/courier_applications_call"
@@ -58,6 +60,8 @@ const backofficeCalls: ReadonlyArray<BffCall<unknown>> = [
     freshnessDays: 30
   }),
   withdrawPredicateCall("4b5c6d7e-8f90-4a1b-9c2d-3e4f5a6b7c8d"),
+  casesCall("confirmed"),
+  caseDetailCall("9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d", "confirmed"),
   loginCall("admin@example.com", "correct horse"),
   verifyTwoFactorCall("123456"),
   setupTwoFactorCall,

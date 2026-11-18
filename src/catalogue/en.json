@@ -126,6 +126,7 @@
   "nav.categories": "Categories",
   "nav.stock": "Stock",
   "nav.predicates": "Credential checks",
+  "nav.cases": "Report cases",
   "nav.dispatch": "Dispatch",
   "nav.fleet": "Fleet",
   "copy.label": "Copy {label}",

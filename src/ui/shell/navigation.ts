@@ -7,6 +7,7 @@ import { Moped } from "../icons/Moped"
 import { Path } from "../icons/Path"
 import { Receipt } from "../icons/Receipt"
 import { SealCheck } from "../icons/SealCheck"
+import { ShieldCheck } from "../icons/ShieldCheck"
 import { SquaresFour } from "../icons/SquaresFour"
 import { Storefront } from "../icons/Storefront"
 import { Tag } from "../icons/Tag"
@@ -24,6 +25,7 @@ const navigation: readonly NavItem[] = [
   { to: "/catalog/categories", label: "nav.categories", icon: Tag, exact: false },
   { to: "/warehouse/stock", label: "nav.stock", icon: Warehouse, exact: false },
   { to: "/seal/predicates", label: "nav.predicates", icon: SealCheck, exact: false },
+  { to: "/seal/cases", label: "nav.cases", icon: ShieldCheck, exact: false },
   { to: "/account", label: "nav.account", icon: IdentificationCard, exact: false }
 ]
 
