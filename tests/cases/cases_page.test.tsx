@@ -130,6 +130,7 @@ describe("the merchant report cases screen", () => {
 
   it("opens case detail and filters by chain confirmation status", async () => {
     const user = userEvent.setup()
+    const detailStatuses: (string | null)[] = []
 
     bff = fakeBff({
       "GET /bff/api/v1/seal/cases": (request) => {
@@ -139,7 +140,11 @@ describe("the merchant report cases screen", () => {
 
         return Response.json({ cases: [summaryA, summaryB] })
       },
-      [`GET /bff/api/v1/seal/cases/${merchantA}`]: () => Response.json(detailA)
+      [`GET /bff/api/v1/seal/cases/${merchantA}`]: (request) => {
+        detailStatuses.push(new URL(request.url).searchParams.get("status"))
+
+        return Response.json(detailA)
+      }
     })
 
     const { container, router } = show("/seal/cases")
@@ -154,6 +159,8 @@ describe("the merchant report cases screen", () => {
     await user.click(screen.getByRole("button", { name: "Confirmed" }))
 
     await waitFor(() => expect(router.state.location.search).toEqual({ selected: merchantA, status: "confirmed" }))
+    await waitFor(() => expect(detailStatuses).toContain("confirmed"))
+    expect(await screen.findByText("seal was broken before arrival")).toBeInTheDocument()
     expect(screen.queryByText("Unnamed merchant (1a2b3c4d)")).not.toBeInTheDocument()
   })
 

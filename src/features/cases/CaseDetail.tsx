@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { BffError } from "../../api/bff_error"
 import { formatText } from "../../i18n/format_text"
 import { useLocale } from "../../i18n/use_locale"
-import type { CaseStatusFilter } from "../../types/case_status_filter.type"
+import type { CaseDetailProps } from "../../types/case_detail_props.type"
 import { CopyValue } from "../../ui/CopyValue"
 import { ShieldCheck } from "../../ui/icons/ShieldCheck"
 import { Notice } from "../../ui/Notice"
@@ -14,7 +14,7 @@ import { merchantHeading, standingLabel, standingTone, timestampLabel, windowLab
 import { caseDetailQuery } from "./cases_queries"
 import { useCasesText } from "./cases_text"
 
-function CaseDetail({ merchantId, status }: { merchantId: string; status: CaseStatusFilter }) {
+function CaseDetail({ merchantId, status }: CaseDetailProps) {
   const text = useCasesText()
   const locale = useLocale()
   const numbers = new Intl.NumberFormat(locale)

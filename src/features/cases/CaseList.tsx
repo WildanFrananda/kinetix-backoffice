@@ -1,21 +1,13 @@
 import { ListBox, ListBoxItem, Text } from "react-aria-components"
 import { formatText } from "../../i18n/format_text"
 import { useLocale } from "../../i18n/use_locale"
-import type { CaseSummary } from "../../types/case_summary.type"
+import type { CaseListProps } from "../../types/case_list_props.type"
 import { StatusTag } from "../../ui/StatusTag"
 import styles from "./Cases.module.css"
 import { merchantHeading, standingLabel, standingTone } from "./case_format"
 import { useCasesText } from "./cases_text"
 
-function CaseList({
-  cases,
-  selected,
-  onSelect
-}: {
-  cases: readonly CaseSummary[]
-  selected: string | null
-  onSelect: (merchantId: string) => void
-}) {
+function CaseList({ cases, selected, onSelect }: CaseListProps) {
   const text = useCasesText()
   const locale = useLocale()
   const numbers = new Intl.NumberFormat(locale)
@@ -25,6 +17,7 @@ function CaseList({
       aria-label={text["cases.list.title"]}
       className={styles.list}
       items={cases}
+      dependencies={[locale, text]}
       selectionMode="single"
       selectionBehavior="replace"
       selectedKeys={selected === null ? [] : [selected]}

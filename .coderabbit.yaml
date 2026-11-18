@@ -7,6 +7,8 @@ reviews:
     base_branches:
       - "main"
       - "development"
+  path_filters:
+    - "!src/routeTree.gen.ts"
   path_instructions:
     - path: "src/**"
       instructions: |

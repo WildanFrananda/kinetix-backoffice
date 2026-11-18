@@ -6,7 +6,7 @@ import { BffError } from "../../api/bff_error"
 import { formatText } from "../../i18n/format_text"
 import { useLocale } from "../../i18n/use_locale"
 import type { CaseStatusFilter } from "../../types/case_status_filter.type"
-import type { CasesSearch } from "../../types/cases_search.type"
+import type { CasesPageProps } from "../../types/cases_page_props.type"
 import { ArrowClockwise } from "../../ui/icons/ArrowClockwise"
 import { ShieldCheck } from "../../ui/icons/ShieldCheck"
 import { KeyHints } from "../../ui/KeyHints"
@@ -24,7 +24,7 @@ import { useCasesText } from "./cases_text"
 
 const statusOptions: readonly CaseStatusFilter[] = ["all", "confirmed", "submitted"]
 
-function CasesPage({ search, onSearch }: { search: CasesSearch; onSearch: (next: CasesSearch) => void }) {
+function CasesPage({ search, onSearch }: CasesPageProps) {
   const text = useCasesText()
   const locale = useLocale()
   const numbers = new Intl.NumberFormat(locale)
